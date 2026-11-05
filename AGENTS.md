@@ -14,7 +14,9 @@ test przeglądarkowy lub produkcyjny, jeżeli nie został wykonany.
 Nie zapisuj w Git sekretów, linków z kluczami tablic, haseł, `.env`, service_role
 ani kluczy sb_secret. Klucz publishable jest publiczną konfiguracją klienta.
 Nie wysyłaj kodu do innego repozytorium. Projekt gry będzie osobnym repozytorium.
-Nie publikuj na Pages ani Sites. Aplikacja uruchamiana jest lokalnie.
+Projekt działa lokalnie i jest przygotowany do GitHub Pages pod /iskra-board/.
+Nie uruchamiaj publikacji ani nie zmieniaj widoczności repo bez polecenia i pozytywnego audytu.
+Migracja jednej tablicy musi być wdrożona i przetestowana przed publiczną publikacją.
 
 Przed destrukcyjnymi operacjami, zmianami RLS, schematu lub uprawnień produkcji
 przedstaw skutki i uzyskaj wyraźną zgodę. Zachowuj dotychczasowe migracje.

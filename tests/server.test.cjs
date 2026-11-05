@@ -9,6 +9,8 @@ test('local server serves application, blocks project files, handles optional co
     await Promise.race([once(child.stdout,'data'),once(child,'exit').then(()=>{throw Error('Server exited before readiness')}),new Promise((_,reject)=>setTimeout(()=>reject(Error('Server did not start')),5000).unref())]);
     const base='http://127.0.0.1:31389';
     const page=await fetch(base);assert.equal(page.status,200);assert.match(await page.text(),/Iskra/);
+    assert.equal((await fetch(base+'/iskra-board/')).status,200);
+    assert.equal((await fetch(base+'/iskra-board/rooms.js')).status,200);
     const config=await fetch(base+'/config.local.js');assert.equal(config.status,200);
     assert.equal((await fetch(base+'/.env')).status,403);
     assert.equal((await fetch(base+'/.git/config')).status,403);

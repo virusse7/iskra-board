@@ -8,15 +8,12 @@
     return;
   }
   const {validToken,normalize,denormalize,diff,overlay} = IskraCore;
-  let token = new URLSearchParams(location.hash.slice(1)).get('room');
-  if (!validToken(token)) {
-    token = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
-    history.replaceState(null, '', '#room=' + token);
-  }
+  const access=window.ISKRA_ACCESS;
+  const token=access?.token;
+  if(!validToken(token))return;
   const cacheKey = 'iskra-room-' + token;
   let baseline, pending=[], busy=false, ready=false, realtimeConnected=false;
   let timer, requested=false, applyingDeferred=false, lastError=false, stopped=false;
-  const previousLocalData=structuredClone(data);
   data={title:'Wspólna burza mózgów',nodes:[],edges:[]};
   try {
     const c=JSON.parse(localStorage.getItem(cacheKey));
@@ -39,19 +36,11 @@
     clearTimeout(timer);timer=setTimeout(sync,delay);
   }
   save=function(){
+    if(!ready)return;
     const next=normalize(data);
     pending.push(...diff(baseline,next));baseline=structuredClone(next);
     cache();stats();updateStatus();requestSync(150);
   };
-  const migrate=document.createElement('button');migrate.className='tool';migrate.textContent='＋ Przenieś lokalne pomysły';
-  migrate.onclick=()=>{
-    if(!ready){toast('Poczekaj na połączenie z bazą');return}
-    const ids=new Map();
-    for(const n of previousLocalData.nodes){const id=crypto.randomUUID();ids.set(n.id,id);data.nodes.push({...n,id})}
-    for(const e of previousLocalData.edges)if(e.every(id=>ids.has(id)))data.edges.push(e.map(id=>ids.get(id)));
-    save();render();migrate.remove();
-  };
-  document.querySelector('aside').insertBefore(migrate,document.querySelector('.hint'));
   function applyRemote(state){
     const active=document.activeElement;
     if(drag||resizing||active?.tagName==='TEXTAREA'||active?.classList?.contains('card-title')||active?.id==='title'){
@@ -67,33 +56,37 @@
     applyingDeferred=false;
   }
   let realtime;
+  let denied=false;
   async function sync(){
     if(busy||stopped)return;busy=true;requested=false;
-    const batch=pending.slice(0,500);
+    const batch=ready?pending.slice(0,500):[];
     try{
       const response=await fetch(cfg.supabaseUrl.replace(/\/$/,'')+'/rest/v1/rpc/iskra_sync',{
         method:'POST',headers:{apikey:cfg.publishableKey,'Content-Type':'application/json'},
         body:JSON.stringify({room_token:token,operations:batch}),signal:AbortSignal.timeout(15000)
       });
+      if(response.status===401||response.status===403){denied=true;access.lock('Ten link nie daje dostępu do Waszej tablicy. Poproś wspólnika o właściwy prywatny link.');realtime?.close();return}
       if(!response.ok)throw Error('RPC request failed');
       const remote=await response.json();
       if(!remote||typeof remote!=='object'||!remote.nodes||!remote.edges)throw Error('Invalid response');
-      pending.splice(0,batch.length);ready=true;lastError=false;
-      applyRemote(remote);cache();
+      pending.splice(0,batch.length);if(!ready)startRealtime();ready=true;lastError=false;
+      applyRemote(remote);access.unlock();cache();
       if(batch.length)realtime?.notify();
     }catch{lastError=true;cache()}
     finally{
       busy=false;updateStatus();
-      requestSync(lastError?3000:requested||pending.length?150:5000);
+      if(!denied)requestSync(lastError?3000:requested||pending.length?150:5000);
     }
   }
   // Separate domain from database key hashes. No access key or board data is broadcast.
+  function startRealtime(){
   crypto.subtle.digest('SHA-256',new TextEncoder().encode('iskra-realtime-v1:'+token)).then(bytes=>{
     if(stopped)return;
     const topic='iskra-'+Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
     realtime=IskraRealtime.connectRealtime({url:cfg.supabaseUrl,key:cfg.publishableKey,topic,
       onChange:()=>requestSync(),onStatus:connected=>{realtimeConnected=connected;updateStatus()}});
   }).catch(()=>{realtimeConnected=false;updateStatus()});
+  }
   document.addEventListener('focusout',()=>{if(applyingDeferred)requestSync()});
   document.getElementById('board').addEventListener('pointerup',()=>{if(applyingDeferred)requestSync()});
   window.addEventListener('online',()=>requestSync());

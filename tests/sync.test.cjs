@@ -12,7 +12,7 @@ function harness(){
   const document={activeElement:null,hidden:false,getElementById(key){if(!elements.has(key))elements.set(key,element());return elements.get(key)},createElement:element,querySelector:()=>({insertBefore(){}}),querySelectorAll:()=>[],addEventListener(name,fn){events[name]=fn}};
   const context={document,IskraCore:core,structuredClone,AbortSignal,TextEncoder,Uint8Array,URLSearchParams,
     crypto:{subtle:{digest:async()=>new ArrayBuffer(32)}},
-    window:{ISKRA_CONFIG:{supabaseUrl:'https://example.supabase.co',publishableKey:'sb_publishable_test'},addEventListener(name,fn){events[name]=fn}},
+    window:{ISKRA_ACCESS:{token:'a'.repeat(64),lock(){},unlock(){}},ISKRA_CONFIG:{supabaseUrl:'https://example.supabase.co',publishableKey:'sb_publishable_test'},addEventListener(name,fn){events[name]=fn}},
     location:{hash:'#room='+'a'.repeat(64)},history:{replaceState(){}},
     localStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},
     data:{title:'Local',nodes:[],edges:[]},drag:null,resizing:null,mode:'move',render(){},stats(){},toast(){},

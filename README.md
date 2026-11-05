@@ -1,204 +1,127 @@
-# Iskra — wspólna tablica uruchamiana lokalnie
+# Iskra — jedna wspólna tablica
 
-Aplikacja działa osobno na dwóch komputerach. Obie przeglądarki łączą się przez internet
-z **jednym projektem Supabase**. Nie ma hostingu, GitHub Pages ani kont użytkowników aplikacji.
-Repozytorium `iskra-board` ma być **prywatne**. Przyszła gra będzie w oddzielnym repozytorium.
+Frontend HTML/CSS/JavaScript, Node.js do pracy lokalnej, wspólny Supabase RPC i Realtime.
+Docelowa strona: https://virusse7.github.io/iskra-board/ — dostęp do danych wymaga pełnego
+**prywatnego linku z kluczem w #room=…**. Sam publiczny adres pokazuje ekran dostępu.
+Nie ma kont użytkowników, tworzenia nowych tablic ani wyboru innych tablic.
 
-Zachowane funkcje: karteczki, kolory, edycja tekstu, przeciąganie karteczek i pustego tła,
-łączenie liniami, usuwanie, eksport/import JSON i tablica 4800 × 3600 px.
+## Uruchomienie lokalnie na obu komputerach
 
-## Pierwsze uruchomienie — na KAŻDYM komputerze
-
-1. Zainstaluj Node.js **22 lub nowszy** (LTS) i Git.
-2. Właściciel dodaje drugą osobę jako współpracownika prywatnego repozytorium GitHub.
-   Druga osoba akceptuje zaproszenie. Dostęp do repozytorium to osobna sprawa od dostępu do tablic.
-3. Sklonuj repozytorium (zamień `TWOJ_LOGIN` na login właściciela):
-
-   ```sh
-   git clone https://github.com/TWOJ_LOGIN/iskra-board.git
-   cd iskra-board
-   npm start
-   ```
-
-4. Otwórz **http://localhost:3000**. Terminal pozostaw otwarty.
-5. Zatrzymanie: **Ctrl+C** w terminalu. Kolejny start: `cd iskra-board`, następnie `npm start`.
-
-Nie trzeba wykonywać `npm install` — projekt nie ma zależności zewnętrznych ani etapu budowania.
-Nie otwieraj `index.html` jako pliku `file://`; używaj lokalnego serwera.
-Serwer nasłuchuje wyłącznie na `127.0.0.1`, nie udostępnia projektu w sieci lokalnej.
-
-### Gdy port jest zajęty
-
-macOS / Linux:
+Wymagany Node.js 22+ i Git. Każda osoba wykonuje:
 
 ```sh
-PORT=3001 npm start
-```
-
-PowerShell:
-
-```powershell
-$env:PORT=3001
+git clone https://github.com/virusse7/iskra-board.git
+cd iskra-board
 npm start
 ```
 
-Otwórz wtedy http://localhost:3001. Komputery mogą używać różnych portów.
+Jeżeli repozytorium nadal jest prywatne, właściciel musi dodać wspólnika jako współpracownika.
+Otwórz otrzymany prywatny link, zmieniając tylko jego początek na `http://localhost:3000/`
+i pozostawiając część `#room=…`. Prawidłowy klucz jest zapamiętywany w przeglądarce
+po potwierdzeniu dostępu przez Supabase. Na nowym urządzeniu otwórz ponownie pełny prywatny link.
+Nie otwieraj index.html przez file://. Terminal pozostaw otwarty, zatrzymanie przez Ctrl+C.
+Serwer nasłuchuje wyłącznie na 127.0.0.1.
 
-## Jak wejść na TĘ SAMĄ tablicę
+Bez instalowania zależności można uruchomić samą aplikację. Do testów użyj `npm ci --ignore-scripts`.
+Jedyna zależność deweloperska to PGlite — odizolowany PostgreSQL do testów migracji.
+Nie jest wysyłana do przeglądarki ani na Pages.
 
-1. Osoba A otwiera aplikację. Nowa tablica otrzymuje losowy, 64-znakowy **klucz dostępu**.
-2. A klika **Kopiuj link do tablicy** albo **Kopiuj klucz tablicy** i przekazuje go B prywatnie.
-3. Osoba B uruchamia własne `npm start`, otwiera własny adres localhost i klika **Dołącz do tablicy**.
-4. B wkleja pełny link A lub sam klucz i klika **Otwórz tablicę**.
-5. Aplikacja przenosi tylko klucz do lokalnego adresu B — nie łączy się z komputerem A.
-   Dlatego link z portem 3000 można wkleić w aplikacji działającej na porcie 3001.
+Inny port: `PORT=3001 npm start` (macOS/Linux) lub `$env:PORT=3001; npm start` (PowerShell).
+Podgląd ścieżki Pages lokalnie: http://localhost:3000/iskra-board/ z tym samym prywatnym fragmentem.
+Aktualizowanie: zatrzymaj serwer, `git pull --ff-only`, ponownie `npm start`, odśwież stronę.
 
-**Nowa wspólna tablica** tworzy nowy klucz; poprzednia tablica pozostaje w Supabase.
-Zachowaj jej pełny link/klucz, aby wrócić. Nie ma publicznej listy tablic ani odzyskiwania
-zgubionych kluczy przez aplikację. Sam login GitHub ani klucz publishable nie daje listy tablic.
+## Zachowane funkcje
 
-## Supabase — wspólny projekt
+Karteczki z własnymi nazwami, tekstem i kolorami, przesuwanie karteczek oraz tła,
+łączenie i usuwanie linii, eksport/import JSON, tablica 4800 × 3600 px, ciemny motyw.
+Uchwyt w dolnym prawym rogu zmienia rozmiar całej karteczki. Strzałki: 10 px,
+Shift + strzałki: 50 px. Rozmiar zapisuje się po puszczeniu uchwytu.
+Przy dodawaniu i przesuwaniu karteczki zachowują 16 px odstępu. Powiększanie zatrzymuje
+się przed sąsiadem. Otworzenie istniejącej tablicy nie przestawia jej zapisanych karteczek.
+Import modyfikuje obecną tablicę — nie tworzy nowego rekordu tablicy.
 
-`dist/config.js` zawiera publiczną konfigurację istniejącego projektu:
-`https://cblmjnfnvmrbkploapvt.supabase.co`. Oba komputery mają korzystać z tego samego pliku.
-Publiczny klucz `sb_publishable_…` jest przeznaczony do przeglądarki, nie jest hasłem bazy.
-**Nie dodawaj service_role, sb_secret, haseł bazy ani osobistych tokenów do żadnego pliku projektu.**
+„Kopiuj prywatny link” używa docelowego adresu Pages, także przy pracy lokalnej.
+Zanim Pages zostanie uruchomione, wspólnik może otworzyć ten link po zamianie początku
+na swój localhost. Klucz nie jest umieszczany w publicznych plikach ani konfiguracji.
 
-Nie uruchamiaj ponownie `supabase/schema.sql` na obecnym projekcie — schemat już istnieje.
-Plik służy jako zapis konfiguracji i do pierwszej instalacji na NOWYM pustym projekcie.
-Przed zmianą schematu lub RLS istniejącej bazy potrzebna jest osobna zgoda i kontrolowana migracja.
+## Jedna tablica i bezpieczeństwo Supabase
 
-Jeśli lokalnie chcesz nadpisać konfigurację, utwórz ignorowany przez Git plik
-`dist/config.local.js`:
+Publiczna konfiguracja istniejącego projektu jest w `dist/config.js`: Project URL,
+klucz **publishable** oraz publiczny adres strony. To konfiguracja klienta, nie sekrety.
+Nigdy nie dodawaj service_role, sb_secret, haseł, osobistych tokenów, klucza tablicy
+ani całego prywatnego linku do Git, workflow, screenshotów z paskiem adresu lub logów.
 
-```js
-window.ISKRA_CONFIG = {
-  supabaseUrl: 'https://TWOJ_PROJEKT.supabase.co',
-  publishableKey: 'sb_publishable_TUTAJ_PUBLICZNY_KLUCZ'
-};
-```
+Migracja `supabase/migrations/20261106_single_board.sql` została zastosowana 6 listopada
+2026 za zgodą właściciela dla głównej tablicy z wcześniejszymi pomysłami. Nie uruchamiaj
+ponownie migracji ani `schema.sql` na działającym projekcie.
 
-Używamy wyłącznie publishable key. Klient odrzuca pozostałe typy kluczy.
+- `iskra_sync` **nie wykonuje INSERT do iskra_rooms**; odczytuje i aktualizuje wyłącznie
+  istniejący wiersz wskazany w chronionej `iskra_active_board`.
+- `iskra_active_board` zawiera tylko jeden wpis ze skrótem klucza. Ma RLS i odebrane
+  bezpośrednie uprawnienia public/anon/authenticated. Nie zawiera jawnego klucza.
+- Wszystkie rekordy starych tablic pozostają w `iskra_rooms`, ale RPC ich nie udostępnia.
+- Nieznany, pusty, błędny lub prawidłowy klucz innej tablicy otrzymuje odmowę dostępu.
+- `iskra_rooms` nadal ma RLS i brak bezpośrednich uprawnień anon/authenticated.
+- RPC działa z SECURITY DEFINER i pustym search_path. Sekret sprawdzany jest po SHA-256.
+- Dowolna osoba posiadająca pełny prywatny link ma uprawnienia do czytania i edycji
+  wspólnej tablicy. Nie ma rozróżnienia autorów ani indywidualnego cofania dostępu.
+- Brak tworzenia rekordów usuwa poprzednią blokadę audytu związaną z nieograniczonym
+  tworzeniem tablic. Nie zastępuje to ogólnej ochrony infrastruktury przed przeciążeniem.
 
-### Realtime i zapis
+Klucz jest w fragmencie URL i pamięci przeglądarki. Fragment nie trafia do GitHub Pages
+w żądaniu HTTP; klucz jest przekazywany do Supabase w treści żądania HTTPS. Strona
+ustawia referrer=no-referrer. Utrata pamięci przeglądarki wymaga ponownego prywatnego linku.
+Na stronie bez klucza nie ma formularza do wybierania/dołączania do innych tablic.
 
-- Źródłem prawdy jest istniejące RPC `iskra_sync`. Zmiany są zapisywane na poziomie pól.
-- Supabase Realtime Broadcast przekazuje wyłącznie puste powiadomienie „zmieniło się”.
-  Odbiorca pobiera dane przez RPC ze swoim kluczem tablicy. Dane i klucz tablicy nie są broadcastowane.
-- Nie trzeba włączać Postgres Changes ani otwierać odczytu tabeli `iskra_rooms`.
-- Temat kanału jest osobnym skrótem SHA-256 od klucza tablicy. Nie jest kluczem RPC ani skrótem zapisanym w tabeli.
-- Publiczne kanały Broadcast muszą być dozwolone w ustawieniach Realtime projektu.
-  Jeżeli są wyłączone, nie zmieniaj uprawnień pochopnie: aplikacja nadal działa w trybie zapasowym.
-- Status **Połączono · Realtime** potwierdza subskrypcję; **tryb zapasowy (5 s)** oznacza
-  odpytywanie RPC bez ręcznego odświeżania. Po awarii WebSocket aplikacja próbuje połączyć się ponownie.
-- Zapis jest wysyłany po krótkim opóźnieniu 150 ms. Niewysłane zmiany są przechowywane
-  lokalnie i ponawiane po odzyskaniu połączenia. Błędy dostępu lub konfiguracji też wyświetlą brak połączenia.
-- Podczas pisania lub przeciągania aktualizacje zdalne czekają do zakończenia edycji,
-  aby nie zabierać kursora. W razie jednoczesnej edycji tego samego pola wygrywa ostatni zapis.
-- Eksport JSON pozostaje ręczną kopią zapasową. Import dotyczy obecnie otwartej tablicy.
+Dla NOWEJ instalacji na innej bazie: uruchom schema.sql, kolejne migracje, wskaż skrót
+już istniejącego rekordu przez sesyjny `iskra.allowed_board_hash`, dopiero wtedy uruchom
+migrację jednej tablicy. Ten krok jest operacją administratora wymagającą osobnej zgody;
+klucz tablicy nie może trafić do pliku migracji. Migracja wycofuje się, jeżeli nie wskazano
+istniejącej tablicy. Nie przywracaj starszych wersji RPC: umożliwiały tworzenie rekordów.
 
-## Dostęp i RLS
+## Synchronizacja i tryb offline
 
-Tabela `iskra_rooms` ma włączone RLS. Role `anon` i `authenticated` nie mają bezpośrednich
-uprawnień SELECT/INSERT/UPDATE/DELETE. Nie dodajemy reguły `using (true)`.
-RPC działa z `SECURITY DEFINER`, pustym `search_path` i wybiera pojedynczy wiersz na podstawie
-SHA-256 przekazanego, losowego 256-bitowego klucza. Parametr nie jest nazwą tabeli ani ścieżką SQL.
-Znajomość klucza jednej tablicy nie pozwala odczytać innych tablic ani innych tabel projektu.
+RPC zapisuje zmienione pola. Realtime Broadcast przekazuje tylko puste powiadomienie,
+nie dane ani klucz. Temat jest osobnym SHA-256 od klucza. Odbiorca ponownie czyta RPC.
+Bez Realtime działa zapasowe odpytywanie co 5 s. Przywrócenie sieci ponawia połączenie.
+Oczekujące operacje zapisują się lokalnie; przed ich wysłaniem po ponownym otwarciu aplikacja
+najpierw weryfikuje klucz odczytem bez zmian. Podczas pisania/przeciągania zdalne zmiany
+czekają do zakończenia edycji. Jednoczesna zmiana tego samego pola: ostatni zapis wygrywa.
+Eksport JSON jest dodatkową ręczną kopią zapasową.
 
-**Klucz tablicy jest sekretem dostępu typu bearer**, a nie publicznym numerem tablicy.
-Każda osoba, której przekażesz cały link/klucz, może czytać i edytować tę tablicę.
-Nie publikuj linków, kluczy tablic ani ich zrzutów w repozytorium, issue lub logach.
-Fragment `#room=…` nie jest wysyłany do lokalnego serwera HTTP, ale klucz trafia przez HTTPS
-w treści żądania RPC do Supabase. Jest też przechowywany na Twoim urządzeniu w przeglądarce.
-
-Brak kont oznacza brak indywidualnego cofania dostępu i identyfikacji autorów.
-Po ujawnieniu klucza przenieście dane do nowej tablicy z nowym kluczem.
-Publiczny endpoint pozwala tworzyć nowe tablice; do szerokiej publicznej dystrybucji potrzebna
-byłaby dodatkowa ochrona przed nadużyciami i limitowanie żądań. To narzędzie dla Waszej dwójki.
-
-## Aktualizowanie aplikacji
-
-Zatrzymaj serwer, wykonaj `git pull`, ponownie `npm start` i odśwież lokalną stronę.
-Nie resetuj ani nie nadpisuj własnych zmian. Dane tablic pozostają w Supabase.
-
-## Testy
+## Testy i audyt
 
 ```sh
+npm ci --ignore-scripts
 npm test
 npm run test:integration
 ```
 
-`npm test`: składnia, klucze i linki z różnych portów, scalanie pól, usuwanie połączeń,
-operacje offline, ochrona przed prototype pollution, protokół Realtime i lokalny serwer.
+`npm test` obejmuje rzeczywisty PostgreSQL PGlite: zachowanie wszystkich rekordów i ich
+zawartości po migracji, dozwolony odczyt/zapis głównej tablicy jako anon, odmowę dla
+nieznanego klucza i klucza innej istniejącej tablicy, brak nowych rekordów i brak dostępu
+bezpośredniego do obu tabel. Obejmuje też synchronizację offline, geometrię, motyw i serwer.
 
-Test integracyjny wymaga internetu i łączy się z projektem skonfigurowanym w `dist/config.js`
-(lub lokalnym nadpisaniu). Tworzy dwie odrębne testowe tablice, testuje RPC, izolację tablic,
-blokadę bezpośredniego odczytu i zapisu oraz **dwa rzeczywiste połączenia Realtime**.
-Nie modyfikuje istniejących tablic, schematu ani RLS. Po teście pozostają dwa rekordy testowych
-pokoi; zawartość testowych karteczek jest usuwana tylko we własnym pokoju testowym.
+Test integracyjny na działającym Supabase nie wymaga sekretnego klucza. Sprawdza, że
+losowy klucz otrzymuje odmowę odczytu/zapisu, oraz blokadę GET/POST/PATCH/DELETE do obu
+tabel. Nie tworzy rekordów i nie zmienia danych. Zachowanie licznika rekordów sprawdzono
+również w produkcyjnej transakcji wdrażającej migrację. Nie używaj starego testu, który tworzył pokoje.
 
-Test ręczny na dwóch komputerach: wejdźcie tym samym kluczem, dodajcie różne karteczki,
-połączcie je, zmieńcie kolory i położenie, usuńcie połączenie. Sprawdźcie zmiany po obu
-stronach bez odświeżania. Następnie na jednym komputerze wyłączcie internet, edytujcie karteczkę,
-włączcie internet i sprawdźcie ponowne połączenie. Jeśli trwa edycja tekstu, kliknijcie puste tło.
+## GitHub Pages — przygotowane, bez automatycznej publikacji
 
-## Utworzenie PRYWATNEGO repozytorium, gdy agent nie ma dostępu do GitHuba
+Workflow `.github/workflows/pages.yml` uruchamia się **wyłącznie ręcznie**. Instaluje
+zależności testowe, uruchamia testy i pakuje wskazane pliki statyczne z dist/. Nie pakuje
+lokalnych nadpisań konfiguracji, outputs/, testów, node_modules ani żadnego klucza tablicy.
+Ścieżki skryptów są względne, działają pod `/iskra-board/`. Serwer Node nie jest potrzebny na Pages.
 
-W Terminalu, w katalogu tego projektu (nie w katalogu innego repozytorium):
+Dopiero po potwierdzonej migracji i pozytywnym audycie właściciel może:
 
-```sh
-gh auth login
-git status
-git remote -v
-```
+1. Scalić zatwierdzoną gałąź ze zmianami do main.
+2. W Settings → General → Danger Zone ustawić Public, jeżeli nadal chce publicznej publikacji.
+3. W Settings → Pages wybrać Source: GitHub Actions.
+4. W Actions wybrać „Deploy Iskra to GitHub Pages” → Run workflow na main.
+5. Po sukcesie otworzyć docelowy adres, a dane sprawdzić przez prywatny link z kluczem.
+6. Na telefonie i drugim komputerze otworzyć pełny prywatny link, sprawdzić synchronizację.
 
-Jeśli `origin` już istnieje, upewnij się, że jest to właściwe prywatne `iskra-board`.
-Nie nadpisuj adresu innego repozytorium. W obecnym przygotowanym katalogu Git jest już
-zainicjalizowany i nie ma remote. Następnie:
-
-```sh
-git add -A
-git diff --cached --stat
-git commit -m "Prepare Iskra for local collaboration with Supabase Realtime"
-gh repo create iskra-board --private --source=. --remote=origin --push
-gh repo view --json nameWithOwner,isPrivate,url
-```
-
-Sprawdź, że `isPrivate` wynosi `true`. Nie włączaj Pages. Jeżeli repozytorium o tej nazwie
-już istnieje, zatrzymaj się i sprawdź jego właściciela oraz zawartość — nie nadpisuj go.
-Nie używaj `--force`. Przed commitem sprawdź listę plików: nie powinno być `.env`,
-`config.local.js`, logów ani linków/kluczy tablic. Nie ma potrzeby zmiany globalnej konfiguracji Git.
-
-Bez CLI: utwórz na GitHub repozytorium `iskra-board`, wybierz **Private**, nie dodawaj
-README ani `.gitignore`, a potem użyj instrukcji GitHub dla przesłania istniejącego repozytorium.
-Dodaj wspólnika przez Settings → Collaborators; konto GitHub jest potrzebne do klonowania,
-nie do korzystania z uruchomionej aplikacji.
-
-Dotychczasowa strona Sites nie jest potrzebna do działania lokalnego. Ta zmiana nie usuwa
-wcześniejszej publikacji ani jej danych i nie wykonuje nowego wdrożenia.
-
-## Motyw i nazwy pomysłów
-
-Przycisk w nagłówku przełącza jasny/ciemny motyw. Wybór jest zapamiętywany lokalnie
-na każdym komputerze; bez własnego wyboru aplikacja korzysta z motywu systemu.
-Kliknij nazwę nad treścią karteczki, aby ją zmienić (maks. 120 znaków). Pusta nazwa
-wyświetla dotychczasowy placeholder „POMYSŁ 01”. Stare tablice i eksporty pozostają zgodne.
-Nazwy są osobnym polem, synchronizowanym tak jak treść, położenie i kolor.
-
-**Jednorazowa aktualizacja Supabase:** zastosowana 5 listopada 2026 w obecnym projekcie za zgodą właściciela. Na innej bazie właściciel musi zatwierdzić i uruchomić
-`supabase/migrations/20261105_idea_titles.sql` w SQL Editor. Zmiana rozszerza walidację
-RPC o pole `title`, nie zmienia RLS ani tabel i nie usuwa danych. Nie uruchamiaj ponownie
-`schema.sql`. Do czasu zastosowania migracji zapis niestandardowych nazw będzie odrzucany
-przez dotychczasowe RPC. Obie osoby powinny zaktualizować klienta.
-
-## Zmiana rozmiaru karteczki
-
-Przeciągnij trójkątny uchwyt w prawym dolnym rogu całej karteczki. Tekst dopasowuje
-się do miejsca, a połączenia przesuwają się razem z jej środkiem. Rozmiar zapisuje się
-po puszczeniu uchwytu i synchronizuje z drugim komputerem. Uchwyt obsługuje też
-strzałki (10 px) i Shift + strzałki (50 px). Minimalny rozmiar: 210 × 194 px, maksymalny:
-1200 × 1200 px, z ograniczeniem do obszaru tablicy.
-
-Migracja `supabase/migrations/20261105_card_sizes.sql` dopuszcza opcjonalne pola
-`width` i `height` w RPC. Nie usuwa danych i nie zmienia tabel ani RLS. Na obecnym
-projekcie zastosowana za zgodą właściciela; na nowej bazie uruchom ją po migracji nazw.
+Samo przesłanie gałęzi nie zmienia widoczności i nie wdraża strony. Nie uznawaj adresu
+Pages za działający, dopóki workflow i test wdrożenia nie potwierdzą sukcesu.
