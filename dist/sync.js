@@ -54,7 +54,7 @@
   document.querySelector('aside').insertBefore(migrate,document.querySelector('.hint'));
   function applyRemote(state){
     const active=document.activeElement;
-    if(drag||active?.tagName==='TEXTAREA'||active?.id==='title'){
+    if(drag||active?.tagName==='TEXTAREA'||active?.classList?.contains('card-title')||active?.id==='title'){
       // Do not retain a stale snapshot: after blur, read the latest server state.
       applyingDeferred=true;return;
     }
@@ -62,7 +62,7 @@
     if(JSON.stringify(data)!==JSON.stringify(next)){
       data=next;baseline=structuredClone(normalize(data));render();
       // Preserve the selected connection endpoint and current tool mode.
-      document.querySelectorAll('textarea').forEach(t=>t.readOnly=mode==='connect');
+      document.querySelectorAll('textarea,.card-title').forEach(t=>t.readOnly=mode==='connect');
     }
     applyingDeferred=false;
   }

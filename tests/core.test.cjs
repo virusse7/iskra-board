@@ -49,6 +49,17 @@ test('untrusted object keys do not pollute prototypes',()=>{
 test('all inline and application scripts have valid syntax',()=>{
   const html=readFileSync('dist/index.html','utf8');
   for(const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(match[1]);
-  for(const file of ['config','rooms','sync','board-core','realtime'])new vm.Script(readFileSync(`dist/${file}.js`,'utf8'));
+  for(const file of ['config','rooms','sync','board-core','realtime','theme'])new vm.Script(readFileSync(`dist/${file}.js`,'utf8'));
   assert.ok(html.includes('width:4800px;height:3600px'));
+});
+
+ test('custom idea titles survive normalization, field merges and export/import',()=>{
+  const before=normalize(board()),after=board();after.nodes[0].title='Mechanika walki';
+  const ops=diff(before,normalize(after));
+  assert.deepEqual(ops,[{path:['nodes','node-a','title'],value:'Mechanika walki'}]);
+  const remote=structuredClone(before);remote.nodes['node-a'].text='Opis wspólnika';
+  const result=denormalize(overlay(remote,ops));
+  assert.equal(result.nodes[0].title,'Mechanika walki');assert.equal(result.nodes[0].text,'Opis wspólnika');
+  assert.equal(JSON.parse(JSON.stringify(result)).nodes[0].title,'Mechanika walki');
+  assert.equal(denormalize(before).nodes.length,1);
 });

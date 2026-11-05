@@ -10,7 +10,7 @@
     return token;
   }
   const normalize = d => ({title:d.title,nodes:Object.fromEntries(d.nodes.map(n=>[n.id,n])),edges:Object.fromEntries(d.edges.map(e=>[[...e].sort().join('_'),e]))});
-  const validNode = n => n && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);
+  const validNode = n => n && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && (n.title===undefined||(typeof n.title==='string'&&n.title.length<=120)) && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);
   const denormalize = d => ({title:typeof d.title==='string'?d.title:'Wspólna tablica',nodes:Object.values(d.nodes||{}).filter(validNode),edges:Object.values(d.edges||{}).filter(e=>Array.isArray(e)&&e.length===2&&e.every(id=>Object.hasOwn(d.nodes,id)&&validNode(d.nodes[id])))});
   function diff(before, after) {
     const ops=[];
@@ -19,7 +19,7 @@
       const a=before[group][id],b=after[group][id];
       if(JSON.stringify(a)===JSON.stringify(b))continue;
       if(group==='edges'||!b)ops.push({path:[group,id],value:b||null});
-      else for(const key of ['id','text','x','y','color'])if(!a||a[key]!==b[key])ops.push({path:['nodes',id,key],value:b[key]});
+      else for(const key of ['id','text','x','y','color','title'])if((key!=='title'||b[key]!==undefined||a?.[key]!==undefined)&&(!a||a[key]!==b[key]))ops.push({path:['nodes',id,key],value:key==='title'?(b[key]??''):b[key]});
     }
     return ops;
   }

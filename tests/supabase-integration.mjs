@@ -24,10 +24,10 @@ let a,b;
 try{
   await call(token);await call(other);
   await call(token,[...node('test-a','Pierwsza osoba'),...node('test-b','Druga osoba'),op(['edges','test-a_test-b'],['test-a','test-b'])]);
-  await call(token,[op(['nodes','test-a','x'],300)]);
+  await call(token,[op(['nodes','test-a','x'],300),op(['nodes','test-a','title'],'Mechanika walki')]);
   await call(token,[op(['nodes','test-b','text'],'Zmieniono')]);
   const state=await call(token);
-  assert.equal(state.nodes['test-a'].x,300);assert.equal(state.nodes['test-b'].text,'Zmieniono');
+  assert.equal(state.nodes['test-a'].x,300);assert.equal(state.nodes['test-a'].title,'Mechanika walki');assert.equal(state.nodes['test-b'].text,'Zmieniono');
   assert.deepEqual(state.edges['test-a_test-b'],['test-a','test-b']);
   assert.deepEqual((await call(other)).nodes,{});
   console.log('PASS: shared read/write, independent edits, edge persistence, room isolation');

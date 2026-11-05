@@ -176,3 +176,17 @@ nie do korzystania z uruchomionej aplikacji.
 
 Dotychczasowa strona Sites nie jest potrzebna do działania lokalnego. Ta zmiana nie usuwa
 wcześniejszej publikacji ani jej danych i nie wykonuje nowego wdrożenia.
+
+## Motyw i nazwy pomysłów
+
+Przycisk w nagłówku przełącza jasny/ciemny motyw. Wybór jest zapamiętywany lokalnie
+na każdym komputerze; bez własnego wyboru aplikacja korzysta z motywu systemu.
+Kliknij nazwę nad treścią karteczki, aby ją zmienić (maks. 120 znaków). Pusta nazwa
+wyświetla dotychczasowy placeholder „POMYSŁ 01”. Stare tablice i eksporty pozostają zgodne.
+Nazwy są osobnym polem, synchronizowanym tak jak treść, położenie i kolor.
+
+**Jednorazowa aktualizacja Supabase:** zastosowana 5 listopada 2026 w obecnym projekcie za zgodą właściciela. Na innej bazie właściciel musi zatwierdzić i uruchomić
+`supabase/migrations/20261105_idea_titles.sql` w SQL Editor. Zmiana rozszerza walidację
+RPC o pole `title`, nie zmienia RLS ani tabel i nie usuwa danych. Nie uruchamiaj ponownie
+`schema.sql`. Do czasu zastosowania migracji zapis niestandardowych nazw będzie odrzucany
+przez dotychczasowe RPC. Obie osoby powinny zaktualizować klienta.
