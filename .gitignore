@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/config.local.js
+*.log
+outputs/
+.DS_Store
+.openai/
+
