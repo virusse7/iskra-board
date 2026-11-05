@@ -13,7 +13,9 @@ export const server = http.createServer(async (req, res) => {
   res.setHeader('Referrer-Policy', 'no-referrer');
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405); res.end(); return; }
-    const name = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    let name = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    if(name==='/iskra-board') {res.writeHead(302,{Location:'/iskra-board/'});res.end();return}
+    if(name.startsWith('/iskra-board/'))name=name.slice('/iskra-board'.length);
     if (name === '/config.local.js') {
       res.setHeader('Content-Type', types['.js']);
       const content = await readFile(path.join(root, name.slice(1)), 'utf8').catch(e => {

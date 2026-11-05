@@ -1,1 +1,1 @@
-window.ISKRA_CONFIG = {supabaseUrl: 'https://cblmjnfnvmrbkploapvt.supabase.co', publishableKey: 'sb_publishable_IVKjAZDlmeo7klFYWgN-4Q_hdmQcGR0'};
+window.ISKRA_CONFIG = {shareBaseUrl: 'https://virusse7.github.io/iskra-board/', supabaseUrl: 'https://cblmjnfnvmrbkploapvt.supabase.co', publishableKey: 'sb_publishable_IVKjAZDlmeo7klFYWgN-4Q_hdmQcGR0'};
