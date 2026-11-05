@@ -54,7 +54,7 @@
   document.querySelector('aside').insertBefore(migrate,document.querySelector('.hint'));
   function applyRemote(state){
     const active=document.activeElement;
-    if(drag||active?.tagName==='TEXTAREA'||active?.classList?.contains('card-title')||active?.id==='title'){
+    if(drag||resizing||active?.tagName==='TEXTAREA'||active?.classList?.contains('card-title')||active?.id==='title'){
       // Do not retain a stale snapshot: after blur, read the latest server state.
       applyingDeferred=true;return;
     }

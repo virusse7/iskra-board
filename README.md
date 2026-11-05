@@ -190,3 +190,15 @@ Nazwy są osobnym polem, synchronizowanym tak jak treść, położenie i kolor.
 RPC o pole `title`, nie zmienia RLS ani tabel i nie usuwa danych. Nie uruchamiaj ponownie
 `schema.sql`. Do czasu zastosowania migracji zapis niestandardowych nazw będzie odrzucany
 przez dotychczasowe RPC. Obie osoby powinny zaktualizować klienta.
+
+## Zmiana rozmiaru karteczki
+
+Przeciągnij trójkątny uchwyt w prawym dolnym rogu całej karteczki. Tekst dopasowuje
+się do miejsca, a połączenia przesuwają się razem z jej środkiem. Rozmiar zapisuje się
+po puszczeniu uchwytu i synchronizuje z drugim komputerem. Uchwyt obsługuje też
+strzałki (10 px) i Shift + strzałki (50 px). Minimalny rozmiar: 210 × 194 px, maksymalny:
+1200 × 1200 px, z ograniczeniem do obszaru tablicy.
+
+Migracja `supabase/migrations/20261105_card_sizes.sql` dopuszcza opcjonalne pola
+`width` i `height` w RPC. Nie usuwa danych i nie zmienia tabel ani RLS. Na obecnym
+projekcie zastosowana za zgodą właściciela; na nowej bazie uruchom ją po migracji nazw.

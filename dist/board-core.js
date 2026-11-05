@@ -10,7 +10,9 @@
     return token;
   }
   const normalize = d => ({title:d.title,nodes:Object.fromEntries(d.nodes.map(n=>[n.id,n])),edges:Object.fromEntries(d.edges.map(e=>[[...e].sort().join('_'),e]))});
-  const validNode = n => n && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && (n.title===undefined||(typeof n.title==='string'&&n.title.length<=120)) && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);
+  const validSize = n => (n.width===undefined||(Number.isFinite(n.width)&&n.width>=210&&n.width<=1200))&&(n.height===undefined||(Number.isFinite(n.height)&&n.height>=194&&n.height<=1200));
+  const clampSize=(width,height,x=0,y=0)=>({width:Math.max(210,Math.min(1200,4800-x,width)),height:Math.max(194,Math.min(1200,3600-y,height))});
+  const validNode = n => n && validSize(n) && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && (n.title===undefined||(typeof n.title==='string'&&n.title.length<=120)) && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);
   const denormalize = d => ({title:typeof d.title==='string'?d.title:'Wspólna tablica',nodes:Object.values(d.nodes||{}).filter(validNode),edges:Object.values(d.edges||{}).filter(e=>Array.isArray(e)&&e.length===2&&e.every(id=>Object.hasOwn(d.nodes,id)&&validNode(d.nodes[id])))});
   function diff(before, after) {
     const ops=[];
@@ -19,7 +21,7 @@
       const a=before[group][id],b=after[group][id];
       if(JSON.stringify(a)===JSON.stringify(b))continue;
       if(group==='edges'||!b)ops.push({path:[group,id],value:b||null});
-      else for(const key of ['id','text','x','y','color','title'])if((key!=='title'||b[key]!==undefined||a?.[key]!==undefined)&&(!a||a[key]!==b[key]))ops.push({path:['nodes',id,key],value:key==='title'?(b[key]??''):b[key]});
+      else for(const key of ['id','text','x','y','color','title','width','height'])if((!['title','width','height'].includes(key)||b[key]!==undefined||a?.[key]!==undefined)&&(!a||a[key]!==b[key]))ops.push({path:['nodes',id,key],value:key==='title'?(b[key]??''):key==='width'?(b[key]??230):key==='height'?(b[key]??194):b[key]});
     }
     return ops;
   }
@@ -34,6 +36,6 @@
     }
     return state;
   }
-  root.IskraCore = {validToken,parseRoom,normalize,denormalize,diff,overlay};
+  root.IskraCore = {validToken,parseRoom,normalize,denormalize,diff,overlay,clampSize};
   if(typeof module!=='undefined')module.exports=root.IskraCore;
 })(globalThis);

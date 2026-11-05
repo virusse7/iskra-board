@@ -63,3 +63,16 @@ test('all inline and application scripts have valid syntax',()=>{
   assert.equal(JSON.parse(JSON.stringify(result)).nodes[0].title,'Mechanika walki');
   assert.equal(denormalize(before).nodes.length,1);
 });
+
+test('card sizes clamp to limits and synchronize independently from text',()=>{
+  const {clampSize}=require('../dist/board-core.js');
+  assert.deepEqual(clampSize(1,1),{width:210,height:194});
+  assert.deepEqual(clampSize(2000,2000),{width:1200,height:1200});
+  assert.deepEqual(clampSize(500,500,4500,3300),{width:300,height:300});
+  const before=normalize(board()),resized=board();resized.nodes[0].width=420;resized.nodes[0].height=320;
+  const remote=structuredClone(before);remote.nodes['node-a'].text='Wspólnik pisze';
+  const next=denormalize(overlay(remote,diff(before,normalize(resized))));
+  assert.equal(next.nodes[0].width,420);assert.equal(next.nodes[0].height,320);
+  assert.equal(next.nodes[0].text,'Wspólnik pisze');
+  assert.equal(denormalize(normalize(board())).nodes.length,1);
+});
