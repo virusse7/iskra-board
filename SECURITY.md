@@ -66,3 +66,36 @@ ani outputs. Zasoby są względne względem /iskra-board/.
 Przed publiczną publikacją należy scalić właściwą gałąź, potwierdzić ustawienia
 repozytorium i Pages, uruchomić workflow, a następnie zweryfikować działający adres
 z prywatnym kluczem na obu urządzeniach. Właściciel ma instrukcje w README.
+
+## Aktualizacja mobilna, checklisty i zoom — 6 listopada 2026
+
+Migrację `20261106_checklists.sql` wdrożono po wyraźnym zatwierdzeniu właściciela.
+Zastępuje wyłącznie RPC. Transakcyjna kontrola liczby rekordów oraz skrótu zawartości
+potwierdziła brak zmian w istniejących danych. Nie zmieniono RLS, tabel ani ograniczenia
+do jednej głównej tablicy; funkcja nadal nie tworzy rekordów iskra_rooms.
+
+Punkty checklist mają walidowane pola i osobne identyfikatory. Zmiany text/done są
+zapisywane niezależnie, a znaczniki usunięcia chronią przed przywróceniem punktu przez
+spóźnioną edycję lub ponowienie starego żądania. Operacja utworzenia jest idempotentna.
+Zapis długich checklist dzielony jest na paczki uwzględniające rozmiar UTF-8.
+Wartości trafiają do elementów input/textarea, a nie do HTML generowanego z treści użytkownika.
+
+Wykonano 34 testy pozytywne, w tym rzeczywiste operacje PostgreSQL: migracja bez utraty
+danych, scalanie niezależnych zmian punktów, usunięcia, walidacja oraz odmowa obcego klucza.
+Test działającego Supabase potwierdził dalszą blokadę nieznanych kluczy i bezpośredniego
+GET/POST/PATCH/DELETE do obu tabel. Skan Gitleaks historii i aktualnych plików nie znalazł
+prywatnych sekretów; dopasowania dotyczą tylko dozwolonego publishable key.
+
+Testy interfejsu wykonywano na osobnej lokalnej kopii danych, bez połączenia do Supabase:
+edycja i zaznaczanie zadań, postęp, dodawanie punktów, ponowne otwarcie, przeciąganie,
+aktualizacja linii, przyciski zoomu, zoom kółkiem i widok 390 × 844 z wysuwanym panelem.
+Produkcja została odczytana kontrolnie i zachowała wszystkie obecne karteczki oraz Realtime.
+Nie wykonywano testowych zmian w treści istniejących pomysłów.
+
+Pinch-to-zoom i dotykowe Pointer Events objęto testami automatycznymi, w tym przerwanie
+przeciągania przez drugi palec oraz poprawne współrzędne przy 200%. Nie wykonano testu
+na fizycznym telefonie ani jednoczesnego ręcznego testu dwóch fizycznych urządzeń.
+
+Workflow Pages uzupełniono o nowe moduły i CSS; test kontroluje kompletność zasobów.
+Nie pakuje serwera testowego, danych testowych, node_modules ani outputs. Nie zmieniano
+widoczności repozytorium ani ustawień hostingu w ramach przygotowania tej aktualizacji.

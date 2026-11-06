@@ -125,3 +125,45 @@ Dopiero po potwierdzonej migracji i pozytywnym audycie właściciel może:
 
 Samo przesłanie gałęzi nie zmienia widoczności i nie wdraża strony. Nie uznawaj adresu
 Pages za działający, dopóki workflow i test wdrożenia nie potwierdzą sukcesu.
+
+## Aktualizacja: telefon, checklisty i zoom
+
+Interfejs telefonu/tabletu ma wysuwany panel „☰”, pełną szerokość przestrzeni roboczej
+oraz przyciski dostosowane do dotyku. Przeciągnij puste tło jednym palcem, a karteczkę
+za uchwyt „⠿” lub jej pusty fragment. Dotknięcie tytułu, tekstu i punktów listy rozpoczyna
+edycję. Zawartość karteczki przewija się niezależnie; przypadkowe zaznaczanie i gesty
+cofania strony są blokowane na przestrzeni roboczej.
+
+Zoom: kółko myszy lub pinch dwoma palcami; na touchpadzie pinch korzysta z Ctrl+wheel.
+Przyciski −/+ zmieniają powiększenie, ↺ przywraca 100% i początek tablicy. Zakres:
+25–250%. Zoom jest lokalny dla widoku, nie zmienia zapisanych współrzędnych ani wymiarów.
+Zoom kółkiem jest zakotwiczony pod kursorem, pinch w środku gestu. Kółko nad przewijaną
+zawartością karteczki przewija tę zawartość. Shift+kółko lub poziomy gest touchpada
+przesuwa widok poziomo. Narzędzie „Usuń połączenie” ułatwia usuwanie linii dotykiem;
+na komputerze nadal działa dwuklik linii i klawiatura.
+
+Kliknij „Dodaj checklistę” w karteczce. Dodawaj kolejne punkty przez „＋ Zadanie” lub Enter,
+zaznaczaj wykonane zadania, edytuj ich tekst i usuwaj punkty przez ×. Licznik pokazuje
+postęp. Brak stałego limitu liczby punktów w interfejsie; pojedynczy tekst punktu ma maks.
+2000 znaków, a dotychczasowy limit całej tablicy 4 MB pozostaje. Przy długiej liście zawartość
+karteczki przewija się. Stare karteczki nadal działają bez checklist.
+
+Punkty mają osobne identyfikatory. Dodawanie dwóch różnych punktów, edycja tekstu i
+zaznaczanie są scalane oddzielnie. Przy równoczesnej zmianie tego samego pola wygrywa
+ostatni zapis. Usunięcie punktu pozostawia znacznik usunięcia: opóźniony zapis nie przywróci
+zadania. Powtórzona operacja utworzenia nie resetuje zmian drugiej osoby. Import JSON
+nadaje importowanym punktom nowe identyfikatory, pozwalając świadomie odtworzyć usunięte
+zadania. Dane zapisują się w Supabase i lokalnej kolejce oczekującej na połączenie.
+
+Migracja `supabase/migrations/20261106_checklists.sql` została wdrożona 6 listopada 2026
+po zgodzie właściciela. Zmienia wyłącznie funkcję RPC — nie dodaje tabel, nie zmienia RLS,
+nie otwiera tworzenia nowych tablic. Kontrola w transakcji potwierdziła zachowanie wszystkich
+danych przed i po migracji. Na innej bazie wymaga osobnego zatwierdzenia; nie uruchamiaj
+ponownie starszych migracji.
+
+Dodatkowe moduły: `dist/app.js` (interfejs), `dist/viewport.js` (zoom/gesty),
+`dist/interaction.css` (responsywność). Workflow Pages zawiera wszystkie te zasoby.
+Testy obejmują wielodotykowe zdarzenia Pointer Events, skalowane współrzędne i operacje
+checklist wykonywane w PostgreSQL. `node tests/preview-server.mjs` udostępnia opcjonalny
+podgląd wyłącznie lokalnych danych testowych na localhost:31390, bez połączenia z Supabase.
+Testowego serwera i danych nie publikuje się na Pages.

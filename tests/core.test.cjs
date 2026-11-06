@@ -49,7 +49,7 @@ test('untrusted object keys do not pollute prototypes',()=>{
 test('all inline and application scripts have valid syntax',()=>{
   const html=readFileSync('dist/index.html','utf8');
   for(const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(match[1]);
-  for(const file of ['config','rooms','sync','board-core','realtime','theme'])new vm.Script(readFileSync(`dist/${file}.js`,'utf8'));
+  for(const file of ['config','rooms','sync','board-core','realtime','theme','app','viewport'])new vm.Script(readFileSync(`dist/${file}.js`,'utf8'));
   assert.ok(html.includes('width:4800px;height:3600px'));
 });
 
@@ -108,4 +108,11 @@ test('shared Pages link keeps project prefix and rejects invalid keys',()=>{
   assert.equal(boardLink('https://virusse7.github.io/iskra-board/',token),`https://virusse7.github.io/iskra-board/#room=${token}`);
   assert.throws(()=>boardLink('javascript:alert(1)',token));
   assert.throws(()=>boardLink('https://example.com/','invalid'));
+});
+
+test('Pages package includes every relative HTML script and stylesheet',()=>{
+  const html=readFileSync('dist/index.html','utf8'),workflow=readFileSync('.github/workflows/pages.yml','utf8');
+  const assets=[...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)].map(match=>match[1]);
+  assert.ok(assets.includes('viewport.js')&&assets.includes('app.js')&&assets.includes('interaction.css'));
+  for(const asset of assets){assert.ok(!asset.startsWith('/'));assert.ok(workflow.includes('dist/'+asset),asset+' must be packaged');}
 });
