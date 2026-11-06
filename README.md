@@ -126,7 +126,7 @@ Dopiero po potwierdzonej migracji i pozytywnym audycie właściciel może:
 Samo przesłanie gałęzi nie zmienia widoczności i nie wdraża strony. Nie uznawaj adresu
 Pages za działający, dopóki workflow i test wdrożenia nie potwierdzą sukcesu.
 
-## Aktualizacja: telefon, checklisty i zoom
+## Aktualizacja: telefon i checklisty (bez zoomowania)
 
 Interfejs telefonu/tabletu ma wysuwany panel „☰”, pełną szerokość przestrzeni roboczej
 oraz przyciski dostosowane do dotyku. Przeciągnij puste tło jednym palcem, a karteczkę
@@ -134,13 +134,10 @@ za uchwyt „⠿” lub jej pusty fragment. Dotknięcie tytułu, tekstu i punkt�
 edycję. Zawartość karteczki przewija się niezależnie; przypadkowe zaznaczanie i gesty
 cofania strony są blokowane na przestrzeni roboczej.
 
-Zoom: kółko myszy lub pinch dwoma palcami; na touchpadzie pinch korzysta z Ctrl+wheel.
-Przyciski −/+ zmieniają powiększenie, ↺ przywraca 100% i początek tablicy. Zakres:
-25–250%. Zoom jest lokalny dla widoku, nie zmienia zapisanych współrzędnych ani wymiarów.
-Zoom kółkiem jest zakotwiczony pod kursorem, pinch w środku gestu. Kółko nad przewijaną
-zawartością karteczki przewija tę zawartość. Shift+kółko lub poziomy gest touchpada
-przesuwa widok poziomo. Narzędzie „Usuń połączenie” ułatwia usuwanie linii dotykiem;
-na komputerze nadal działa dwuklik linii i klawiatura.
+Stała skala 100% — bez przycisków zoomu i pinch-to-zoom. Kółko myszy lub touchpad
+przewija tablicę pionowo, Shift+kółko albo poziomy gest touchpada przewija poziomo.
+Na telefonie przesuwaj tło jednym palcem. Karteczki i połączenia zachowują współrzędne.
+Narzędzie „Usuń połączenie” nadal działa dotykiem.
 
 Kliknij „Dodaj checklistę” w karteczce. Dodawaj kolejne punkty przez „＋ Zadanie” lub Enter,
 zaznaczaj wykonane zadania, edytuj ich tekst i usuwaj punkty przez ×. Licznik pokazuje
@@ -163,7 +160,7 @@ ponownie starszych migracji.
 
 Dodatkowe moduły: `dist/app.js` (interfejs), `dist/viewport.js` (zoom/gesty),
 `dist/interaction.css` (responsywność). Workflow Pages zawiera wszystkie te zasoby.
-Testy obejmują wielodotykowe zdarzenia Pointer Events, skalowane współrzędne i operacje
+Testy obejmują zdarzenia Pointer Events, stałe współrzędne i operacje
 checklist wykonywane w PostgreSQL. `node tests/preview-server.mjs` udostępnia opcjonalny
 podgląd wyłącznie lokalnych danych testowych na localhost:31390, bez połączenia z Supabase.
 Testowego serwera i danych nie publikuje się na Pages.
