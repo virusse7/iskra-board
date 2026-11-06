@@ -35,11 +35,20 @@
     if(busy){requested=true;return}
     clearTimeout(timer);timer=setTimeout(sync,delay);
   }
+  // Collect edits even if the final pointer event was lost or a read finishes
+  // before the drag's save handler. Never replace unsaved coordinates with a poll.
+  function stageLocalChanges(){
+    const next=normalize(data), changes=diff(baseline,next);
+    if(!changes.length)return false;
+    pending.push(...structuredClone(changes));
+    baseline=structuredClone(next);
+    cache();
+    return true;
+  }
   save=function(){
-    if(!ready)return;
-    const next=normalize(data);
-    pending.push(...structuredClone(diff(baseline,next)));baseline=structuredClone(next);
-    cache();stats();updateStatus();requestSync(150);
+    stageLocalChanges();
+    stats();updateStatus();
+    if(ready)requestSync(150);
   };
   function applyRemote(state){
     const active=document.activeElement;
@@ -47,6 +56,8 @@
       // Do not retain a stale snapshot: after blur, read the latest server state.
       applyingDeferred=true;return;
     }
+    // Capture DOM/model edits not yet queued before applying the server snapshot.
+    stageLocalChanges();
     const next=denormalize(overlay(structuredClone(state),pending));
     if(JSON.stringify(data)!==JSON.stringify(next)){
       data=next;baseline=structuredClone(normalize(data));render();
@@ -59,6 +70,7 @@
   let denied=false;
   async function sync(){
     if(busy||stopped)return;busy=true;requested=false;
+    if(ready&&!drag&&!resizing)stageLocalChanges();
     const batch=ready?IskraCore.selectBatch(pending):[];
     try{
       const response=await fetch(cfg.supabaseUrl.replace(/\/$/,'')+'/rest/v1/rpc/iskra_sync',{
@@ -87,7 +99,11 @@
       onChange:()=>requestSync(),onStatus:connected=>{realtimeConnected=connected;updateStatus()}});
   }).catch(()=>{realtimeConnected=false;updateStatus()});
   }
-  document.addEventListener('boardidle',()=>{if(applyingDeferred)requestSync()});
+  document.addEventListener('boardidle',()=>{
+    // The idle notification is an independent commit safeguard for drag gestures.
+    stageLocalChanges();
+    if(applyingDeferred||pending.length)requestSync(150);
+  });
   document.addEventListener('focusout',()=>{if(applyingDeferred)requestSync()});
   document.getElementById('board').addEventListener('pointerup',()=>{if(applyingDeferred)requestSync()});
   window.addEventListener('online',()=>requestSync());
