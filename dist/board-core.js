@@ -17,7 +17,11 @@
   const normalize = d => ({title:d.title,nodes:Object.fromEntries(d.nodes.map(n=>[n.id,n])),edges:Object.fromEntries(d.edges.map(e=>[[...e].sort().join('_'),e]))});
   const validSize = n => (n.width===undefined||(Number.isFinite(n.width)&&n.width>=210&&n.width<=1200))&&(n.height===undefined||(Number.isFinite(n.height)&&n.height>=194&&n.height<=1200));
   const clampSize=(width,height,x=0,y=0)=>({width:Math.max(210,Math.min(1200,4800-x,width)),height:Math.max(194,Math.min(1200,3600-y,height))});
-  const validNode = n => n && validSize(n) && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && (n.title===undefined||(typeof n.title==='string'&&n.title.length<=120)) && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);
+  const validTask = task => task && Object.keys(task).every(key=>['text','done','order'].includes(key)) && typeof task.text==='string' && task.text.length<=2000 && typeof task.done==='boolean' && Number.isFinite(task.order) && task.order>=0 && task.order<=Number.MAX_SAFE_INTEGER;
+  const checklistItems = node => Object.entries(node.checklist||{}).filter(([,task])=>validTask(task)).sort((a,b)=>a[1].order-b[1].order||(a[0]<b[0]?-1:1));
+  const validChecklist = list => list===undefined||(list!==null&&typeof list==='object'&&!Array.isArray(list)&&Object.entries(list).every(([id,task])=>/^[a-zA-Z0-9_-]{1,80}$/.test(id)&&(task===null||validTask(task))));
+  const progress = node => {const items=checklistItems(node);return {done:items.filter(([,item])=>item.done).length,total:items.length}};
+  const validNode = n => n && validChecklist(n.checklist) && validSize(n) && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && (n.title===undefined||(typeof n.title==='string'&&n.title.length<=120)) && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);
   const denormalize = d => ({title:typeof d.title==='string'?d.title:'Wspólna tablica',nodes:Object.values(d.nodes||{}).filter(validNode),edges:Object.values(d.edges||{}).filter(e=>Array.isArray(e)&&e.length===2&&e.every(id=>Object.hasOwn(d.nodes,id)&&validNode(d.nodes[id])))});
   function diff(before, after) {
     const ops=[];
@@ -27,8 +31,28 @@
       if(JSON.stringify(a)===JSON.stringify(b))continue;
       if(group==='edges'||!b)ops.push({path:[group,id],value:b||null});
       else for(const key of ['id','text','x','y','color','title','width','height'])if((!['title','width','height'].includes(key)||b[key]!==undefined||a?.[key]!==undefined)&&(!a||a[key]!==b[key]))ops.push({path:['nodes',id,key],value:key==='title'?(b[key]??''):key==='width'?(b[key]??230):key==='height'?(b[key]??194):b[key]});
+      if(b){
+        const previous=a?.checklist||{},next=b.checklist||{};
+        for(const taskId of new Set([...Object.keys(previous),...Object.keys(next)])){
+          const old=previous[taskId],task=next[taskId];
+          if(JSON.stringify(old)===JSON.stringify(task))continue;
+          const path=['nodes',id,'checklist',taskId];
+          if(!task){if(old)ops.push({path,value:null})}
+          else if(!old)ops.push({path,value:task});
+          else for(const field of ['text','done'])if(old[field]!==task[field])ops.push({path:[...path,field],value:task[field]});
+        }
+      }
     }
     return ops;
+  }
+  function selectBatch(pending,maxBytes=750000,maxOps=500){
+    const batch=[];let bytes=2;const encoder=new TextEncoder();
+    for(const op of pending){
+      const size=encoder.encode(JSON.stringify(op)).length+1;
+      if(batch.length&&(bytes+size>maxBytes||batch.length>=maxOps))break;
+      batch.push(op);bytes+=size;
+    }
+    return batch;
   }
   function overlay(state,ops) {
     for(const op of ops){
@@ -95,6 +119,6 @@
     }
     return changed;
   }
-  root.IskraCore = {validToken,parseRoom,boardLink,normalize,denormalize,diff,overlay,clampSize,CARD_GAP,overlaps,freePosition,fitSize,separateCards};
+  root.IskraCore = {validToken,parseRoom,boardLink,normalize,denormalize,diff,overlay,clampSize,CARD_GAP,overlaps,freePosition,fitSize,separateCards,validChecklist,checklistItems,progress,validNode,selectBatch};
   if(typeof module!=='undefined')module.exports=root.IskraCore;
 })(globalThis);

@@ -17,7 +17,7 @@
   const controls=()=>[document.querySelector('header'),sidebar,document.getElementById('viewport')];
   window.ISKRA_ACCESS={token,
     lock(message){overlay.hidden=false;document.getElementById('accessMessage').textContent=message;controls().forEach(el=>el.inert=true)},
-    unlock(){overlay.hidden=true;controls().forEach(el=>el.inert=false);try{localStorage.setItem('iskra-active-room',token)}catch{}}
+    unlock(){overlay.hidden=true;controls().forEach(el=>el.inert=false);window.IskraTools?.refresh();try{localStorage.setItem('iskra-active-room',token)}catch{}}
   };
   window.ISKRA_ACCESS.lock(token?'Sprawdzanie dostępu do tablicy…':'Otwórz prywatny link do Waszej tablicy. Na nowym urządzeniu potrzebujesz pełnego linku od wspólnika.');
   document.getElementById('shareRoom').onclick=async()=>{

@@ -38,12 +38,12 @@
   save=function(){
     if(!ready)return;
     const next=normalize(data);
-    pending.push(...diff(baseline,next));baseline=structuredClone(next);
+    pending.push(...structuredClone(diff(baseline,next)));baseline=structuredClone(next);
     cache();stats();updateStatus();requestSync(150);
   };
   function applyRemote(state){
     const active=document.activeElement;
-    if(drag||resizing||active?.tagName==='TEXTAREA'||active?.classList?.contains('card-title')||active?.id==='title'){
+    if(drag||resizing||active?.tagName==='TEXTAREA'||active?.classList?.contains('card-title')||(active?.type==='text'&&active?.closest?.('.checklist'))||active?.id==='title'){
       // Do not retain a stale snapshot: after blur, read the latest server state.
       applyingDeferred=true;return;
     }
@@ -51,7 +51,7 @@
     if(JSON.stringify(data)!==JSON.stringify(next)){
       data=next;baseline=structuredClone(normalize(data));render();
       // Preserve the selected connection endpoint and current tool mode.
-      document.querySelectorAll('textarea,.card-title').forEach(t=>t.readOnly=mode==='connect');
+      if(typeof applyMode==='function')applyMode();
     }
     applyingDeferred=false;
   }
@@ -59,7 +59,7 @@
   let denied=false;
   async function sync(){
     if(busy||stopped)return;busy=true;requested=false;
-    const batch=ready?pending.slice(0,500):[];
+    const batch=ready?IskraCore.selectBatch(pending):[];
     try{
       const response=await fetch(cfg.supabaseUrl.replace(/\/$/,'')+'/rest/v1/rpc/iskra_sync',{
         method:'POST',headers:{apikey:cfg.publishableKey,'Content-Type':'application/json'},
@@ -87,6 +87,7 @@
       onChange:()=>requestSync(),onStatus:connected=>{realtimeConnected=connected;updateStatus()}});
   }).catch(()=>{realtimeConnected=false;updateStatus()});
   }
+  document.addEventListener('boardidle',()=>{if(applyingDeferred)requestSync()});
   document.addEventListener('focusout',()=>{if(applyingDeferred)requestSync()});
   document.getElementById('board').addEventListener('pointerup',()=>{if(applyingDeferred)requestSync()});
   window.addEventListener('online',()=>requestSync());

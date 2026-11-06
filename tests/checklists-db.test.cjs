@@ -1,0 +1,44 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {readFileSync}=require('node:fs');
+const {createHash}=require('node:crypto');
+test('checklist migration preserves data, single-board access and independent concurrent task edits',async()=>{
+  const {PGlite}=await import('@electric-sql/pglite');const db=new PGlite();
+  const key='a'.repeat(64),hash=createHash('sha256').update(key).digest('hex');
+  const state={title:'Existing',nodes:{one:{id:'one',text:'Original text',x:37,y:89,color:'#f5edb4'}},edges:{}};
+  const op=(path,value)=>({path,value});
+  const path=id=>['nodes','one','checklist',id];
+  const rpc=async operations=>(await db.query('select public.iskra_sync($1,$2) as state',[key,JSON.stringify(operations)])).rows[0].state;
+  try{
+    await db.exec('create role anon; create role authenticated;');
+    await db.exec(readFileSync('supabase/schema.sql','utf8'));
+    await db.query('insert into public.iskra_rooms(token_hash,state) values($1,$2)',[hash,JSON.stringify(state)]);
+    await db.query("select set_config('iskra.allowed_board_hash',$1,false)",[hash]);
+    await db.exec(readFileSync('supabase/migrations/20261106_single_board.sql','utf8'));
+    const before=(await db.query('select * from public.iskra_rooms')).rows;
+    await db.exec(readFileSync('supabase/migrations/20261106_checklists.sql','utf8'));
+    assert.deepEqual((await db.query('select * from public.iskra_rooms')).rows,before);
+    await db.exec('set role anon');
+    const initialA={text:'A',done:false,order:1},initialB={text:'B',done:false,order:1};
+    await rpc([op(path('task-a'),initialA)]);
+    await rpc([op(path('task-b'),initialB)]);
+    await rpc([op([...path('task-a'),'text'],'Edited by first person')]);
+    const merged=await rpc([op([...path('task-a'),'done'],true)]);
+    assert.equal(merged.nodes.one.checklist['task-a'].text,'Edited by first person');
+    assert.equal(merged.nodes.one.checklist['task-a'].done,true);
+    assert.equal(merged.nodes.one.checklist['task-b'].text,'B');
+    const replayed=await rpc([op(path('task-a'),initialA)]);
+    assert.equal(replayed.nodes.one.checklist['task-a'].done,true);
+    await rpc([op(path('task-a'),null)]);
+    const stale=await rpc([op([...path('task-a'),'text'],'Stale edit'),op(path('task-a'),initialA)]);
+    assert.equal(stale.nodes.one.checklist['task-a'],null);
+    for(const value of ['yes',null,1])await assert.rejects(rpc([op([...path('task-b'),'done'],value)]));
+    await assert.rejects(rpc([op(path('bad'),{text:'Bad',done:false,order:1,unexpected:'field'})]));
+    await assert.rejects(rpc([op([...path('task-b'),'text'],'x'.repeat(2001))]));
+    const final=await rpc([]);assert.equal(final.nodes.one.text,'Original text');assert.equal(final.nodes.one.x,37);
+    assert.equal(final.nodes.one.checklist['task-b'].text,'B');
+    await assert.rejects(db.query('select public.iskra_sync($1,$2)',['b'.repeat(64),'[]']),e=>e.code==='42501');
+    await assert.rejects(db.query('select * from public.iskra_rooms'),e=>e.code==='42501');
+    await db.exec('reset role');assert.equal((await db.query('select count(*)::int as n from public.iskra_rooms')).rows[0].n,1);
+  }finally{await db.close()}
+});

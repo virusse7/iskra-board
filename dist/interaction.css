@@ -1,0 +1,55 @@
+.hint{position:static;margin-top:24px}
+aside{overflow-y:auto}
+/* One coordinate system for mouse, touch and scaled workspace. */
+#world{position:relative;width:4800px;height:3600px;overflow:hidden}
+#board{position:absolute;left:0;top:0;transform-origin:0 0;touch-action:none;-webkit-user-select:none;user-select:none}
+#viewport{touch-action:none;overscroll-behavior:none}
+.card{padding:12px 12px 8px;touch-action:none;overflow:hidden}
+.card .top{margin-bottom:6px;gap:3px;min-height:40px}
+.card-grip{font-size:24px;min-width:28px;text-align:center;cursor:grab;color:#68765d;touch-action:none}
+.card .top .card-delete{width:40px;height:40px;min-width:40px;font-size:24px;opacity:.8}
+.card-title{font-size:14px;min-height:40px}
+.card-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:0 3px 4px}
+.card textarea{display:block;flex:none;width:100%;height:80px;min-height:64px;font-size:16px;padding:6px 0;resize:none;user-select:text;-webkit-user-select:text;overscroll-behavior:contain}
+.card input{user-select:text;-webkit-user-select:text}
+.card-footer{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:28px;padding-right:27px;flex-shrink:0}
+.card-footer small{margin:0;padding:0;font-size:9px;white-space:nowrap}
+.checklist-progress{font-size:10px;white-space:nowrap;color:#526347}
+.checklist{padding-top:4px;border-top:1px solid #0002}
+.checklist-row{display:flex;gap:5px;align-items:center;min-height:44px}
+.checklist-row input[type=checkbox]{width:24px;height:24px;flex-shrink:0;accent-color:#466b3e;cursor:pointer}
+.checklist-row input[type=text]{width:100%;min-width:0;border:0;border-radius:4px;background:transparent;color:#303b2d;padding:10px 2px;font-size:16px;outline-offset:-2px}
+.checklist-row.done input[type=text]{text-decoration:line-through;opacity:.65}
+.card .task-delete{width:40px;height:44px;min-width:40px;padding:0;font-size:22px;background:transparent;border:0;color:#526347}
+.card .checklist-add{min-height:44px;width:100%;background:#ffffff40;border:1px dashed #0003;padding:6px;font-size:13px;color:#43543a;text-align:left}
+html[data-theme=dark] .card .task-delete,html[data-theme=dark] .card .checklist-add{background:transparent;color:#43543a;border-color:#0003}
+.resize-handle{width:32px;height:32px;font-size:24px;line-height:32px}
+[data-mode=connect] .card{outline:1px dashed #789554;outline-offset:3px;cursor:crosshair}
+[data-mode=erase] path{stroke-width:12px;opacity:.75;cursor:pointer}
+.floating{padding:6px 9px;gap:6px;max-width:calc(100% - 280px)}
+.floating button{min-width:44px;min-height:44px;padding:8px;font-size:20px}
+#zoomValue{min-width:48px;text-align:center;font-variant-numeric:tabular-nums;font-size:13px}
+#mode{font-size:11px;max-width:210px;white-space:normal}
+#stats{white-space:nowrap;font-size:11px}
+#toolsToggle,#toolsBackdrop{display:none}
+button,input[type=checkbox]{-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,textarea:focus-visible,path:focus-visible{outline:2px solid #779957;outline-offset:2px}
+@media(max-width:1000px){#mode{display:none}.floating{max-width:calc(100% - 190px)}header{gap:12px;padding:0 16px}#title{min-width:100px;width:170px}}
+@media(max-width:800px){
+  header{height:112px;display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;align-content:center}
+  header .logo{font-size:23px}header .divider{display:none}#title{flex:1;min-width:90px;width:110px;font-size:16px;height:44px}
+  header button{min-height:44px;padding:8px 12px}#themeToggle{font-size:12px;min-width:65px}.saved{display:none}
+  header .export{display:inline-flex;font-size:13px}#add{flex:1;min-height:44px;font-size:14px}
+  #toolsToggle{display:block;min-width:44px;padding:6px;font-size:20px}
+  aside{top:112px;bottom:0;width:264px;left:0;padding:16px;z-index:40;transform:translateX(-100%);transition:transform .18s ease;box-shadow:10px 0 30px #0002}
+  aside h1,aside>p{display:none}.label{margin-top:20px;font-size:11px}.tool{min-height:46px;padding:10px;font-size:14px}
+  .tools-open aside{transform:translateX(0)}
+  .tools-open #toolsBackdrop{display:block;position:fixed;inset:112px 0 0;z-index:35;border:0;border-radius:0;background:#0006}
+  main{left:0;top:112px;bottom:0;right:0}.swatches{gap:10px}.swatch{width:36px;height:36px}
+  .floating{left:50%;bottom:max(12px,env(safe-area-inset-bottom));max-width:calc(100% - 20px);white-space:nowrap;border-radius:14px;gap:4px;padding:5px 7px}
+  .floating button{min-width:44px;min-height:44px}.floating #mode{display:none}.floating #stats{font-size:10px}
+  .card .top .card-delete{width:44px;height:44px;min-width:44px}.card-title{min-height:44px;font-size:16px}
+  .resize-handle{width:40px;height:40px;font-size:26px;line-height:40px}.card-footer{padding-right:32px}
+  #toast{top:124px;left:12px;right:12px;max-width:420px;margin:auto;font-size:13px;z-index:80}
+}
+@media(prefers-reduced-motion:reduce){aside{transition:none}}
