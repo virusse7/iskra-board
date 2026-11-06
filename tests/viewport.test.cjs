@@ -57,3 +57,30 @@ test('eraser lets users tap links',()=>{
   const h=harness('erase'),path={},target={closest:s=>s==='path'?path:null};
   assert.equal(h.event('pointerdown',100,100,1,target,'mouse').defaultPrevented,undefined);
 });
+
+test('drag commit uses the current cloud save handler rather than the browser-only startup handler',()=>{
+  const source=readFileSync('dist/app.js','utf8');
+  const mountCall=source.match(/const boardView=IskraViewport\.mount\(\{[\s\S]*?\}\);window\.IskraView=boardView;/);
+  assert.ok(mountCall,'viewport.mount callback must be present');
+  const context={
+    window:{result:[]},viewport:{},board:{},$:()=>({}),
+    IskraViewport:{mount:({onCommit})=>({onCommit})},
+    document:{dispatchEvent(){}},
+    Event:class {}
+  };
+  vm.createContext(context);
+  vm.runInContext(`
+    let data={nodes:[]},mode='move',drag=null,resizing=null;
+    function save(){window.result.push('local-only')}
+    function positionCard(){}
+    function sizeCard(){}
+    function choose(){}
+    function link(){}
+    function lines(){}
+    ${mountCall[0]}
+    // Supabase replaces save after app initialization.
+    save=function(){window.result.push('supabase')}
+    window.IskraView.onCommit();
+  `,context);
+  assert.deepEqual(context.window.result,['supabase']);
+});
