@@ -113,7 +113,7 @@ function closeTools(){document.body.classList.remove('tools-open');refreshTools(
 window.IskraTools={refresh:refreshTools};toolMedia.addEventListener('change',refreshTools);
 const viewport=$('viewport'),board=$('board');
 const boardView=IskraViewport.mount({viewport,board,world:$('world'),getMode:()=>mode,getNode:id=>data.nodes.find(n=>n.id===id),
-  onSelect:choose,onLink:link,onMove:positionCard,onResize:sizeCard,onCommit:save,
+  onSelect:choose,onLink:link,onMove:positionCard,onResize:sizeCard,onCommit:()=>save(),
   onRollback:(id,original)=>{const n=data.nodes.find(n=>n.id===id);if(n){Object.assign(n,original);const el=cardElement(id);el.style.left=n.x+'px';el.style.top=n.y+'px';el.style.width=(n.width??230)+'px';el.style.height=(n.height??194)+'px';lines()}},
   onInteraction:active=>{drag=active?{}:null;if(!active)document.dispatchEvent(new Event('boardidle'))}
 });window.IskraView=boardView;
