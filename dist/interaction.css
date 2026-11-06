@@ -1,8 +1,8 @@
 .hint{position:static;margin-top:24px}
 aside{overflow-y:auto}
-/* One coordinate system for mouse, touch and scaled workspace. */
+/* Mouse and touch use the same fixed-scale coordinates. */
 #world{position:relative;width:4800px;height:3600px;overflow:hidden}
-#board{position:absolute;left:0;top:0;transform-origin:0 0;touch-action:none;-webkit-user-select:none;user-select:none}
+#board{position:absolute;left:0;top:0;touch-action:none;-webkit-user-select:none;user-select:none}
 #viewport{touch-action:none;overscroll-behavior:none}
 .card{padding:12px 12px 8px;touch-action:none;overflow:hidden}
 .card .top{margin-bottom:6px;gap:3px;min-height:40px}
@@ -27,8 +27,6 @@ html[data-theme=dark] .card .task-delete,html[data-theme=dark] .card .checklist-
 [data-mode=connect] .card{outline:1px dashed #789554;outline-offset:3px;cursor:crosshair}
 [data-mode=erase] path{stroke-width:12px;opacity:.75;cursor:pointer}
 .floating{padding:6px 9px;gap:6px;max-width:calc(100% - 280px)}
-.floating button{min-width:44px;min-height:44px;padding:8px;font-size:20px}
-#zoomValue{min-width:48px;text-align:center;font-variant-numeric:tabular-nums;font-size:13px}
 #mode{font-size:11px;max-width:210px;white-space:normal}
 #stats{white-space:nowrap;font-size:11px}
 #toolsToggle,#toolsBackdrop{display:none}
@@ -47,7 +45,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,path:focus-visib
   .tools-open #toolsBackdrop{display:block;position:fixed;inset:112px 0 0;z-index:35;border:0;border-radius:0;background:#0006}
   main{left:0;top:112px;bottom:0;right:0}.swatches{gap:10px}.swatch{width:36px;height:36px}
   .floating{left:50%;bottom:max(12px,env(safe-area-inset-bottom));max-width:calc(100% - 20px);white-space:nowrap;border-radius:14px;gap:4px;padding:5px 7px}
-  .floating button{min-width:44px;min-height:44px}.floating #mode{display:none}.floating #stats{font-size:10px}
+  .floating #mode{display:none}.floating #stats{font-size:10px}
   .card .top .card-delete{width:44px;height:44px;min-width:44px}.card-title{min-height:44px;font-size:16px}
   .resize-handle{width:40px;height:40px;font-size:26px;line-height:40px}.card-footer{padding-right:32px}
   #toast{top:124px;left:12px;right:12px;max-width:420px;margin:auto;font-size:13px;z-index:80}
