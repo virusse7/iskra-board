@@ -18,7 +18,7 @@
   const validSize = n => (n.width===undefined||(Number.isFinite(n.width)&&n.width>=210&&n.width<=1200))&&(n.height===undefined||(Number.isFinite(n.height)&&n.height>=194&&n.height<=1200));
   const clampSize=(width,height,x=0,y=0)=>({width:Math.max(210,Math.min(1200,4800-x,width)),height:Math.max(194,Math.min(1200,3600-y,height))});
   const validTask = task => task && Object.keys(task).every(key=>['text','done','order'].includes(key)) && typeof task.text==='string' && task.text.length<=2000 && typeof task.done==='boolean' && Number.isFinite(task.order) && task.order>=0 && task.order<=Number.MAX_SAFE_INTEGER;
-  const checklistItems = node => Object.entries(node.checklist||{}).filter(([,task])=>validTask(task)).sort((a,b)=>a[1].order-b[1].order||(a[0]<b[0]?-1:1));
+  const checklistItems = node => Object.entries(node.checklist||{}).filter(([,task])=>validTask(task)).sort((a,b)=>Number(a[1].done)-Number(b[1].done)||a[1].order-b[1].order||(a[0]<b[0]?-1:1));
   const validChecklist = list => list===undefined||(list!==null&&typeof list==='object'&&!Array.isArray(list)&&Object.entries(list).every(([id,task])=>/^[a-zA-Z0-9_-]{1,80}$/.test(id)&&(task===null||validTask(task))));
   const progress = node => {const items=checklistItems(node);return {done:items.filter(([,item])=>item.done).length,total:items.length}};
   const validNode = n => n && validChecklist(n.checklist) && validSize(n) && typeof n.id==='string' && /^[a-zA-Z0-9_-]{1,80}$/.test(n.id) && typeof n.text==='string' && (n.title===undefined||(typeof n.title==='string'&&n.title.length<=120)) && Number.isFinite(n.x) && Number.isFinite(n.y) && ['#f5edb4','#e2ebd1','#e8dff2','#f6dfcd','#dcebf0'].includes(n.color);

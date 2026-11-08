@@ -34,3 +34,36 @@ test('large Unicode checklists are split into request batches below the RPC payl
   const batch=core.selectBatch(pending);assert.ok(batch.length>0&&batch.length<500);
   assert.ok(new TextEncoder().encode(JSON.stringify(batch)).length<750000);
 });
+
+test('completed tasks move after unfinished tasks and restore original order when unchecked',()=>{
+  const n={...node,checklist:{
+    a:{text:'Start',done:true,order:1},
+    b:{text:'Prepare',done:false,order:2},
+    c:{text:'Review',done:false,order:3},
+    d:{text:'Finish',done:true,order:4},
+    removed:null
+  }};
+  assert.deepEqual(core.checklistItems(n).map(([id])=>id),['b','c','a','d']);
+  n.checklist.a.done=false;
+  assert.deepEqual(core.checklistItems(n).map(([id])=>id),['a','b','c','d']);
+  n.checklist.c.done=true;
+  assert.deepEqual(core.checklistItems(n).map(([id])=>id),['a','b','c','d']);
+  n.checklist.b.done=true;
+  assert.deepEqual(core.checklistItems(n).map(([id])=>id),['a','b','c','d']);
+  n.checklist.b.done=false;
+  assert.deepEqual(core.checklistItems(n).map(([id])=>id),['a','b','c','d']);
+  assert.deepEqual(core.progress(n),{done:2,total:4});
+});
+test('completion order affects rendering, not serialized task metadata',()=>{
+  const n={...node,checklist:{
+    first:{text:'First',done:false,order:1},
+    second:{text:'Second',done:false,order:2}
+  }};
+  const before=core.normalize(board(structuredClone(n)));
+  n.checklist.first.done=true;
+  assert.deepEqual(core.checklistItems(n).map(([id])=>id),['second','first']);
+  assert.deepEqual(core.diff(before,core.normalize(board(n))),[
+    {path:['nodes','one','checklist','first','done'],value:true}
+  ]);
+  assert.equal(n.checklist.first.order,1);
+});
