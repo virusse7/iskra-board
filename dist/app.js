@@ -37,7 +37,22 @@ function positionCard(id,x,y){
 }
 function sizeCard(id,width,height){
   const n=data.nodes.find(n=>n.id===id),size=IskraCore.fitSize(n,data.nodes,width,height);Object.assign(n,size);
-  const el=cardElement(id);el.style.width=n.width+'px';el.style.height=n.height+'px';lines();
+  const el=cardElement(id);el.style.width=n.width+'px';el.style.height=n.height+'px';
+  const editor=el.querySelector('textarea');if(editor)adjustTextarea(editor);
+  lines();
+}
+// Grow the description to its content; grow the card only when there is free space.
+// Existing card resize handle remains the manual adjustment option.
+function adjustTextarea(text,grow=false){
+  text.style.height='auto';
+  text.style.height=Math.max(80,Math.min(900,text.scrollHeight))+'px';
+  if(!grow)return;
+  const content=text.closest('.card-content'),card=text.closest('.card');
+  if(!content||!card)return;
+  const node=data.nodes.find(item=>item.id===card.dataset.id);
+  if(!node)return;
+  const missing=content.scrollHeight-content.clientHeight;
+  if(missing>2)sizeCard(node.id,node.width??230,(node.height??194)+missing+8);
 }
 function checklist(n,content,footer){
   const items=IskraCore.checklistItems(n),wrapper=document.createElement('div');wrapper.className='checklist';
@@ -51,7 +66,7 @@ function checklist(n,content,footer){
   for(const [id,item] of items){
     const row=document.createElement('div');row.className='checklist-row'+(item.done?' done':'');row.dataset.taskId=id;
     const check=document.createElement('input');check.type='checkbox';check.checked=item.done;check.setAttribute('aria-label','Zadanie ukończone');
-    check.onchange=()=>{item.done=check.checked;row.classList.toggle('done',item.done);updateProgress();save()};
+    check.onchange=()=>{item.done=check.checked;row.classList.toggle('done',item.done);updateProgress();reorderRows();save()};
     const text=document.createElement('input');text.type='text';text.value=item.text;text.maxLength=2000;text.placeholder='Nowe zadanie…';text.setAttribute('aria-label','Treść zadania');
     text.oninput=()=>{item.text=text.value;save()};
     text.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addTask()}};
@@ -61,6 +76,13 @@ function checklist(n,content,footer){
   }
   const add=document.createElement('button');add.type='button';add.className='checklist-add';add.textContent=items.length?'＋ Zadanie':'☑ Dodaj checklistę';add.onclick=addTask;
   wrapper.append(add);content.append(wrapper);footer.append(progress);updateProgress();
+  function reorderRows(){
+    // Reorder existing elements, preserving focused inputs and task identities.
+    const rows=new Map([...wrapper.querySelectorAll('.checklist-row')].map(row=>[row.dataset.taskId,row]));
+    for(const [taskId] of IskraCore.checklistItems(n)){
+      const row=rows.get(taskId);if(row)wrapper.insertBefore(row,add);
+    }
+  }
 }
 function render(){
   $('title').value=data.title;$('cards').replaceChildren();
@@ -77,7 +99,7 @@ function render(){
     top.append(grip,title,remove);
     const content=document.createElement('div');content.className='card-content';
     const text=document.createElement('textarea');text.value=n.text;text.setAttribute('aria-label','Treść pomysłu '+(index+1));text.placeholder='Zapisz pomysł…';
-    text.oninput=()=>{n.text=text.value;save()};content.append(text);
+    text.oninput=()=>{n.text=text.value;adjustTextarea(text,true);save()};content.append(text);
     const footer=document.createElement('div');footer.className='card-footer';
     const badge=document.createElement('small');badge.textContent='✦ POMYSŁ';footer.append(badge);
     card.append(top,content,footer);$('cards').append(card);
@@ -85,7 +107,7 @@ function render(){
     const handle=document.createElement('button');handle.type='button';handle.className='resize-handle';handle.textContent='◢';handle.setAttribute('aria-label','Zmień rozmiar pomysłu '+(index+1));
     handle.title='Przeciągnij, aby zmienić rozmiar. Strzałki: 10 px, Shift: 50 px';
     handle.onkeydown=e=>{const d={ArrowRight:[1,0],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowUp:[0,-1]}[e.key];if(!d)return;e.preventDefault();const step=e.shiftKey?50:10;sizeCard(n.id,(n.width??230)+d[0]*step,(n.height??194)+d[1]*step);save()};
-    card.append(handle);
+    card.append(handle);adjustTextarea(text);
   });
   applyMode();lines();stats();choose(selected);
 }

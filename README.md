@@ -164,3 +164,15 @@ Testy obejmują zdarzenia Pointer Events, stałe współrzędne i operacje
 checklist wykonywane w PostgreSQL. `node tests/preview-server.mjs` udostępnia opcjonalny
 podgląd wyłącznie lokalnych danych testowych na localhost:31390, bez połączenia z Supabase.
 Testowego serwera i danych nie publikuje się na Pages.
+
+## Ułatwienia edycji karteczek i checklist
+
+Pole opisu karteczki rozszerza się wraz z wpisywanym tekstem (do 900 px).
+W miarę możliwości sama karteczka rośnie w pionie, zachowując odstęp od innych
+karteczek; gdy nie ma miejsca, jej zawartość przewija się. Rozmiar karteczki
+nadal można dostosować ręcznie uchwytem w prawym dolnym rogu.
+
+W checklistach aktywne punkty są na górze, ukończone — na dole. Po odznaczeniu
+punkt wraca do swojego pierwotnego miejsca wśród aktywnych zadań. Zmienia się
+tylko kolejność wyświetlania, a nie zapisane identyfikatory, znaczniki czasu
+czy kolejność utworzenia. Synchronizacja z Supabase działa bez migracji.
