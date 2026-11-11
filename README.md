@@ -126,7 +126,7 @@ Dopiero po potwierdzonej migracji i pozytywnym audycie właściciel może:
 Samo przesłanie gałęzi nie zmienia widoczności i nie wdraża strony. Nie uznawaj adresu
 Pages za działający, dopóki workflow i test wdrożenia nie potwierdzą sukcesu.
 
-## Aktualizacja: telefon i checklisty (bez zoomowania)
+## Aktualizacja: telefon, checklisty i zoom
 
 Interfejs telefonu/tabletu ma wysuwany panel „☰”, pełną szerokość przestrzeni roboczej
 oraz przyciski dostosowane do dotyku. Przeciągnij puste tło jednym palcem, a karteczkę
@@ -134,9 +134,8 @@ za uchwyt „⠿” lub jej pusty fragment. Dotknięcie tytułu, tekstu i punkt�
 edycję. Zawartość karteczki przewija się niezależnie; przypadkowe zaznaczanie i gesty
 cofania strony są blokowane na przestrzeni roboczej.
 
-Stała skala 100% — bez przycisków zoomu i pinch-to-zoom. Kółko myszy lub touchpad
-przewija tablicę pionowo, Shift+kółko albo poziomy gest touchpada przewija poziomo.
-Na telefonie przesuwaj tło jednym palcem. Karteczki i połączenia zachowują współrzędne.
+Zoom 25–250% działa kółkiem, gestem pinch i przyciskami −/+. Przycisk ↺ resetuje widok.
+Zmiana skali nie zmienia zapisanych współrzędnych.
 Narzędzie „Usuń połączenie” nadal działa dotykiem.
 
 Kliknij „Dodaj checklistę” w karteczce. Dodawaj kolejne punkty przez „＋ Zadanie” lub Enter,
@@ -176,3 +175,7 @@ W checklistach aktywne punkty są na górze, ukończone — na dole. Po odznacze
 punkt wraca do swojego pierwotnego miejsca wśród aktywnych zadań. Zmienia się
 tylko kolejność wyświetlania, a nie zapisane identyfikatory, znaczniki czasu
 czy kolejność utworzenia. Synchronizacja z Supabase działa bez migracji.
+
+Podczas edycji kółko przewija karteczkę, dopóki jest w niej miejsce do przewinięcia.
+Tekst opisu i zadań zawija się do szerokości karteczki, także dla długich adresów.
+W checkliście Enter dodaje zadanie, Shift+Enter wstawia nowy wiersz.

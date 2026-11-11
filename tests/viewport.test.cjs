@@ -2,10 +2,13 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const {readFileSync}=require('node:fs');
-const {worldPoint}=require('../dist/viewport.js');
-test('world coordinates use a fixed 100% scale',()=>{
-  assert.deepEqual(worldPoint(200,150,{left:400,top:300}),{x:600,y:450});
-  assert.doesNotMatch(readFileSync('dist/index.html','utf8'),/id="(?:zoomIn|zoomOut|zoomValue|resetView)"/);
+const {clampZoom,zoomAt,worldPoint}=require('../dist/viewport.js');
+test('zoom is clamped and preserves the world point under the cursor',()=>{
+  const before={scale:1,left:400,top:300},world=worldPoint(200,150,before);
+  const after=zoomAt(before,2,200,150);
+  assert.deepEqual(worldPoint(200,150,after),world);
+  assert.equal(clampZoom(.01),.25);assert.equal(clampZoom(9),2.5);
+  assert.equal((worldPoint(400,200,{scale:2,left:0,top:0})).x,200);
 });
 function harness(mode='move'){
   const listeners={},controls={};const captures=new Set();
@@ -18,46 +21,64 @@ function harness(mode='move'){
     const e={type,clientX:x,clientY:y,pointerId:id,pointerType,button:0,target,preventDefault(){this.defaultPrevented=true},stopImmediatePropagation(){}};
     listeners[type](e);return e;
   }
-  return {view,node,board,controls,viewport,event,listeners,commits:()=>commits};
+  return {view,node,controls,viewport,event,listeners,document:context.document,commits:()=>commits};
 }
-test('one finger pans while second finger cannot zoom',()=>{
+test('single-finger background pan and two-finger pinch do not change note coordinates',()=>{
   const h=harness();h.viewport.scrollLeft=300;h.viewport.scrollTop=300;
   h.event('pointerdown',100,100);h.event('pointermove',150,120);h.event('pointerup',150,120);
   assert.equal(h.viewport.scrollLeft,250);assert.equal(h.viewport.scrollTop,280);
-  h.event('pointerdown',100,100,1);h.event('pointerdown',200,100,2);h.event('pointermove',300,100,2);
-  assert.equal(h.viewport.scrollLeft,250);h.event('pointerup',200,100,2);h.event('pointerup',100,100,1);
-  assert.equal(h.view.read().scale,undefined);assert.equal(h.board.style.transform,undefined);
+  const original={...h.node};h.event('pointerdown',100,100,1);h.event('pointerdown',200,100,2);h.event('pointermove',300,100,2);
+  assert.equal(h.view.read().scale,2);assert.deepEqual(h.node,original);
+  h.event('pointerup',300,100,2);h.event('pointerup',100,100,1);
 });
-test('dragging a card uses unchanged coordinates and saves',()=>{
-  const h=harness(),card={dataset:{id:'one'}},target={closest:s=>s==='.card'?card:null};
-  h.event('pointerdown',200,200,1,target,'mouse');h.event('pointermove',300,260,1,target,'mouse');
-  h.event('pointerup',300,260,1,target,'mouse');
-  assert.equal(h.node.x,200);assert.equal(h.node.y,160);assert.equal(h.commits(),1);
+test('dragging at 200% converts screen distance into world distance',()=>{
+  const h=harness();h.view.zoom(2,0,0);
+  const card={dataset:{id:'one'}},target={closest:selector=>selector==='.card'?card:null};
+  h.event('pointerdown',200,200,1,target,'mouse');h.event('pointermove',300,260,1,target,'mouse');h.event('pointerup',300,260,1,target,'mouse');
+  assert.equal(h.node.x,150);assert.equal(h.node.y,130);assert.equal(h.commits(),1);
 });
-test('touch card move and resize preserve actual distances',()=>{
-  const h=harness(),card={dataset:{id:'one'}},target={closest:s=>s==='.card'?card:null};
-  h.event('pointerdown',50,50,1,target);h.event('pointermove',100,100,1,target);h.event('pointerup',100,100,1,target);
-  assert.equal(h.node.x,150);assert.equal(h.node.y,150);
-  const resize={closest:s=>s==='.card'?card:s==='.resize-handle'?{}:null};
-  h.event('pointerdown',500,500,2,resize);h.event('pointermove',580,540,2,resize);h.event('pointerup',580,540,2,resize);
-  assert.equal(h.node.width,310);assert.equal(h.node.height,234);
-});
-test('mouse wheel pans and trackpad pinch does not zoom',()=>{
-  const h=harness();h.viewport.scrollTop=100;h.viewport.scrollLeft=40;
-  const wheel=(dy,opts={})=>{
-    const e={deltaX:0,deltaY:dy,deltaMode:0,ctrlKey:!!opts.ctrlKey,shiftKey:!!opts.shiftKey,
-      target:{closest:()=>null},preventDefault(){this.prevented=true}};
-    h.listeners.wheel(e);return e;
-  };
-  assert.equal(wheel(60).prevented,true);assert.equal(h.viewport.scrollTop,160);
-  wheel(20,{shiftKey:true});assert.equal(h.viewport.scrollLeft,60);
-  wheel(-200,{ctrlKey:true});assert.equal(h.viewport.scrollTop,160);
-});
-test('eraser lets users tap links',()=>{
-  const h=harness('erase'),path={},target={closest:s=>s==='path'?path:null};
-  assert.equal(h.event('pointerdown',100,100,1,target,'mouse').defaultPrevented,undefined);
+test('starting a pinch cancels an uncommitted card drag',()=>{
+  const h=harness(),original={...h.node};
+  const card={dataset:{id:'one'}},target={closest:selector=>selector==='.card'?card:null};
+  h.event('pointerdown',100,100,1,target);h.event('pointermove',140,140,1,target);
+  h.event('pointerdown',200,100,2);
+  assert.deepEqual(h.node,original);assert.equal(h.commits(),0);
 });
 
+test('eraser leaves line taps available instead of capturing them as background drags',()=>{
+  const h=harness('erase'),path={};const target={closest:selector=>selector==='path'?path:null};
+  const event=h.event('pointerdown',100,100,1,target,'mouse');
+  assert.equal(event.defaultPrevented,undefined);
+});
+
+test('touch dragging and resizing use world units at different zoom levels',()=>{
+  const h=harness();h.view.zoom(.5,0,0);
+  const card={dataset:{id:'one'}},target={closest:selector=>selector==='.card'?card:null};
+  h.event('pointerdown',50,50,1,target);h.event('pointermove',100,100,1,target);h.event('pointerup',100,100,1,target);
+  assert.equal(h.node.x,200);assert.equal(h.node.y,200);
+  h.view.zoom(2.5,0,0);
+  const grip={closest:selector=>selector==='.card'?card:selector==='.resize-handle'?{}:null};
+  h.event('pointerdown',500,500,2,grip);h.event('pointermove',750,625,2,grip);h.event('pointerup',750,625,2,grip);
+  assert.equal(h.node.width,330);assert.equal(h.node.height,244);
+});
+
+test('wheel zooms at the edge of a focused card scroller',()=>{
+  const h=harness();h.document.activeElement={};
+  let offset=0;
+  const scroller={contains:()=>true,get scrollTop(){return offset},set scrollTop(value){offset=Math.min(100,Math.max(0,value))}};
+  const e={clientX:100,clientY:100,deltaMode:0,deltaX:0,deltaY:100,target:{closest:s=>s==='.card-content'?scroller:null},preventDefault(){}};
+  h.listeners.wheel(e);assert.equal(h.view.read().scale,1);
+  h.listeners.wheel(e);assert.ok(h.view.read().scale<1);
+});
+test('Safari gesture zoom uses the starting scale and does not also process wheel',()=>{
+  const h=harness(),e={clientX:0,clientY:0,preventDefault(){}};
+  h.listeners.gesturestart(e);
+  h.listeners.gesturechange({...e,scale:1.5});
+  h.listeners.gesturechange({...e,scale:2});
+  h.listeners.wheel({...e,ctrlKey:true,deltaMode:0,deltaY:-50,deltaX:0});
+  assert.equal(h.view.read().scale,2);
+  h.listeners.gestureend(e);
+});
 test('drag commit uses the current cloud save handler rather than the browser-only startup handler',()=>{
   const source=readFileSync('dist/app.js','utf8');
   const mountCall=source.match(/const boardView=IskraViewport\.mount\(\{[\s\S]*?\}\);window\.IskraView=boardView;/);

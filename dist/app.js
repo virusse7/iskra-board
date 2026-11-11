@@ -61,18 +61,19 @@ function checklist(n,content,footer){
   function addTask(){
     n.checklist??={};const id=crypto.randomUUID();n.checklist[id]={text:'',done:false,order:Date.now()};
     if(!items.length)sizeCard(n.id,n.width??230,Math.max(n.height??194,320));
-    save();render();cardElement(n.id).querySelector(`[data-task-id="${id}"] input[type="text"]`).focus();
+    save();render();cardElement(n.id).querySelector(`[data-task-id="${id}"] textarea`).focus();
   }
   for(const [id,item] of items){
     const row=document.createElement('div');row.className='checklist-row'+(item.done?' done':'');row.dataset.taskId=id;
     const check=document.createElement('input');check.type='checkbox';check.checked=item.done;check.setAttribute('aria-label','Zadanie ukończone');
     check.onchange=()=>{item.done=check.checked;row.classList.toggle('done',item.done);updateProgress();reorderRows();save()};
-    const text=document.createElement('input');text.type='text';text.value=item.text;text.maxLength=2000;text.placeholder='Nowe zadanie…';text.setAttribute('aria-label','Treść zadania');
-    text.oninput=()=>{item.text=text.value;save()};
-    text.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addTask()}};
+    const field=document.createElement('div');field.className='task-field';field.dataset.text=item.text;
+    const text=document.createElement('textarea');text.className='task-text';text.rows=1;text.wrap='soft';text.value=item.text;text.maxLength=2000;text.placeholder='Nowe zadanie…';text.setAttribute('aria-label','Treść zadania');
+    text.oninput=()=>{item.text=text.value;field.dataset.text=text.value;save()};
+    text.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();addTask()}};
     const remove=document.createElement('button');remove.type='button';remove.className='task-delete';remove.textContent='×';remove.setAttribute('aria-label','Usuń zadanie');
     remove.onclick=()=>{n.checklist[id]=null;save();render()};
-    row.append(check,text,remove);wrapper.append(row);
+    field.append(text);row.append(check,field,remove);wrapper.append(row);
   }
   const add=document.createElement('button');add.type='button';add.className='checklist-add';add.textContent=items.length?'＋ Zadanie':'☑ Dodaj checklistę';add.onclick=addTask;
   wrapper.append(add);content.append(wrapper);footer.append(progress);updateProgress();
@@ -98,7 +99,7 @@ function render(){
     remove.onclick=()=>{data.nodes=data.nodes.filter(item=>item.id!==n.id);data.edges=data.edges.filter(edge=>!edge.includes(n.id));save();render()};
     top.append(grip,title,remove);
     const content=document.createElement('div');content.className='card-content';
-    const text=document.createElement('textarea');text.value=n.text;text.setAttribute('aria-label','Treść pomysłu '+(index+1));text.placeholder='Zapisz pomysł…';
+    const text=document.createElement('textarea');text.wrap='soft';text.value=n.text;text.setAttribute('aria-label','Treść pomysłu '+(index+1));text.placeholder='Zapisz pomysł…';
     text.oninput=()=>{n.text=text.value;adjustTextarea(text,true);save()};content.append(text);
     const footer=document.createElement('div');footer.className='card-footer';
     const badge=document.createElement('small');badge.textContent='✦ POMYSŁ';footer.append(badge);
@@ -119,7 +120,7 @@ function add(x,y){
   Object.assign(n,position);data.nodes.push(n);save();render();choose(n.id);closeTools();cardElement(n.id).querySelector('textarea').focus();
 }
 function applyMode(){
-  document.querySelectorAll('.card-title,.card textarea,.checklist input[type="text"]').forEach(input=>input.readOnly=mode!=='move');
+  document.querySelectorAll('.card-title,.card textarea').forEach(input=>input.readOnly=mode!=='move');
   document.querySelectorAll('.checklist button,.checklist input[type="checkbox"]').forEach(input=>input.disabled=mode!=='move');
   $('board').dataset.mode=mode;
 }

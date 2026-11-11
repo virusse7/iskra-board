@@ -18,8 +18,8 @@ aside{overflow-y:auto}
 .checklist{padding-top:4px;border-top:1px solid #0002}
 .checklist-row{display:flex;gap:5px;align-items:center;min-height:44px}
 .checklist-row input[type=checkbox]{width:24px;height:24px;flex-shrink:0;accent-color:#466b3e;cursor:pointer}
-.checklist-row input[type=text]{width:100%;min-width:0;border:0;border-radius:4px;background:transparent;color:#303b2d;padding:10px 2px;font-size:16px;outline-offset:-2px}
-.checklist-row.done input[type=text]{text-decoration:line-through;opacity:.65}
+
+
 .card .task-delete{width:40px;height:44px;min-width:40px;padding:0;font-size:22px;background:transparent;border:0;color:#526347}
 .card .checklist-add{min-height:44px;width:100%;background:#ffffff40;border:1px dashed #0003;padding:6px;font-size:13px;color:#43543a;text-align:left}
 html[data-theme=dark] .card .task-delete,html[data-theme=dark] .card .checklist-add{background:transparent;color:#43543a;border-color:#0003}
@@ -51,3 +51,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,path:focus-visib
   #toast{top:124px;left:12px;right:12px;max-width:420px;margin:auto;font-size:13px;z-index:80}
 }
 @media(prefers-reduced-motion:reduce){aside{transition:none}}
+
+.card textarea{min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:hidden}
+.task-field{position:relative;display:grid;flex:1;min-width:0}
+.task-field::after,.card .task-text{grid-area:1/1;min-width:0;min-height:44px;height:auto;padding:10px 2px;font:inherit;font-size:16px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.task-field::after{content:attr(data-text) " ";visibility:hidden}
+.card .task-text{position:absolute;inset:0;width:100%;height:100%;max-height:none;overflow:hidden;border-radius:4px}
+.checklist-row.done .task-text{text-decoration:line-through;opacity:.65}
+
+#board{transform-origin:0 0}
+.floating button{min-width:44px;min-height:44px;padding:8px;font-size:20px}
+#zoomValue{min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
